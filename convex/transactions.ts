@@ -1,0 +1,221 @@
+import { query, mutation } from "./_generated/server";
+import { v } from "convex/values";
+
+/**
+ * Create a new transaction for a security.
+ */
+export const createTransaction = mutation({
+  args: {
+    securityId: v.id("securities"),
+    date: v.number(), // timestamp
+    numShares: v.number(),
+    totalPriceCents: v.number(),
+    commissionFeeCents: v.optional(v.number()),
+    transactionType: v.union(
+      v.literal("buy"),
+      v.literal("sell"),
+      v.literal("return_of_capital"),
+      v.literal("reinvested_dividend"),
+      v.literal("reinvested_capital_gains_distribution"),
+    ),
+  },
+  returns: v.id("transactions"),
+  handler: async (ctx, args) => {
+    // Validate inputs
+    if (args.numShares === 0) {
+      throw new Error("Number of shares cannot be zero");
+    }
+    if (args.totalPriceCents < 0) {
+      throw new Error("Total price cannot be negative");
+    }
+    if (args.commissionFeeCents !== undefined && args.commissionFeeCents < 0) {
+      throw new Error("Commission fee cannot be negative");
+    }
+
+    // Verify security exists
+    const security = await ctx.db.get(args.securityId);
+    if (!security) {
+      throw new Error("Security not found");
+    }
+
+    // Get the next sort order
+    const existingTransactions = await ctx.db
+      .query("transactions")
+      .withIndex("by_security_and_sort", (q) =>
+        q.eq("securityId", args.securityId),
+      )
+      .collect();
+
+    const maxSortOrder = existingTransactions.reduce(
+      (max, t) => Math.max(max, t.sortOrder),
+      0,
+    );
+
+    return await ctx.db.insert("transactions", {
+      securityId: args.securityId,
+      date: args.date,
+      numShares: args.numShares,
+      totalPriceCents: args.totalPriceCents,
+      commissionFeeCents: args.commissionFeeCents || 0,
+      transactionType: args.transactionType,
+      sortOrder: maxSortOrder + 1,
+    });
+  },
+});
+
+/**
+ * Get all transactions for a security, ordered by sort order.
+ */
+export const listTransactionsBySecurity = query({
+  args: {
+    securityId: v.id("securities"),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("transactions"),
+      _creationTime: v.number(),
+      securityId: v.id("securities"),
+      date: v.number(),
+      numShares: v.number(),
+      totalPriceCents: v.number(),
+      commissionFeeCents: v.optional(v.number()),
+      transactionType: v.union(
+        v.literal("buy"),
+        v.literal("sell"),
+        v.literal("return_of_capital"),
+        v.literal("reinvested_dividend"),
+        v.literal("reinvested_capital_gains_distribution"),
+      ),
+      sortOrder: v.number(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("transactions")
+      .withIndex("by_security_and_sort", (q) =>
+        q.eq("securityId", args.securityId),
+      )
+      .order("asc")
+      .collect();
+  },
+});
+
+/**
+ * Get a single transaction by ID.
+ */
+export const getTransaction = query({
+  args: {
+    transactionId: v.id("transactions"),
+  },
+  returns: v.union(
+    v.object({
+      _id: v.id("transactions"),
+      _creationTime: v.number(),
+      securityId: v.id("securities"),
+      date: v.number(),
+      numShares: v.number(),
+      totalPriceCents: v.number(),
+      commissionFeeCents: v.optional(v.number()),
+      transactionType: v.union(
+        v.literal("buy"),
+        v.literal("sell"),
+        v.literal("return_of_capital"),
+        v.literal("reinvested_dividend"),
+        v.literal("reinvested_capital_gains_distribution"),
+      ),
+      sortOrder: v.number(),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.transactionId);
+  },
+});
+
+/**
+ * Update a transaction's details.
+ */
+export const updateTransaction = mutation({
+  args: {
+    transactionId: v.id("transactions"),
+    date: v.number(),
+    numShares: v.number(),
+    totalPriceCents: v.number(),
+    commissionFeeCents: v.optional(v.number()),
+    transactionType: v.union(
+      v.literal("buy"),
+      v.literal("sell"),
+      v.literal("return_of_capital"),
+      v.literal("reinvested_dividend"),
+      v.literal("reinvested_capital_gains_distribution"),
+    ),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    // Validate inputs
+    if (args.numShares === 0) {
+      throw new Error("Number of shares cannot be zero");
+    }
+    if (args.totalPriceCents < 0) {
+      throw new Error("Total price cannot be negative");
+    }
+    if (args.commissionFeeCents !== undefined && args.commissionFeeCents < 0) {
+      throw new Error("Commission fee cannot be negative");
+    }
+
+    const transaction = await ctx.db.get(args.transactionId);
+    if (!transaction) {
+      throw new Error("Transaction not found");
+    }
+
+    await ctx.db.patch(args.transactionId, {
+      date: args.date,
+      numShares: args.numShares,
+      totalPriceCents: args.totalPriceCents,
+      commissionFeeCents: args.commissionFeeCents || 0,
+      transactionType: args.transactionType,
+    });
+    return null;
+  },
+});
+
+/**
+ * Delete a transaction.
+ */
+export const deleteTransaction = mutation({
+  args: {
+    transactionId: v.id("transactions"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const transaction = await ctx.db.get(args.transactionId);
+    if (!transaction) {
+      throw new Error("Transaction not found");
+    }
+
+    await ctx.db.delete(args.transactionId);
+    return null;
+  },
+});
+
+/**
+ * Reorder transactions by updating their sort order.
+ */
+export const reorderTransactions = mutation({
+  args: {
+    transactionIds: v.array(v.id("transactions")),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    for (let i = 0; i < args.transactionIds.length; i++) {
+      const transactionId = args.transactionIds[i];
+      const transaction = await ctx.db.get(transactionId);
+      if (!transaction) {
+        throw new Error(`Transaction ${transactionId} not found`);
+      }
+
+      await ctx.db.patch(transactionId, { sortOrder: i + 1 });
+    }
+    return null;
+  },
+});

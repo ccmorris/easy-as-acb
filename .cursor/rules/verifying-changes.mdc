@@ -1,0 +1,8 @@
+---
+description: Verifying Agent Changes
+globs:
+alwaysApply: true
+---
+
+Use type check to validate your changes, eg. `bun run tsc`
+Do not run the application in dev mode, eg. do not use `bun run dev`
