@@ -1,11 +1,9 @@
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
-import { formatCurrency } from "../utils/currency";
 import { useParams, useNavigate } from "react-router-dom";
 import { TransactionList } from "./TransactionList";
 import { SecuritySummary } from "./SecuritySummary";
-import { CapitalGainsReport } from "./CapitalGainsReport";
 
 export function SecurityDetail() {
   const { portfolioId, securityId } = useParams<{
@@ -57,22 +55,18 @@ export function SecurityDetail() {
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Security Summary */}
         <div>
           <SecuritySummary summary={summary} currency={security.currency} />
         </div>
 
-        {/* Capital Gains Report */}
-        <div>
-          <CapitalGainsReport capitalGains={capitalGains} />
-        </div>
-
         {/* Transactions */}
-        <div className="lg:col-span-2">
+        <div>
           <TransactionList
             securityId={securityId as Id<"securities">}
             transactions={transactions}
+            capitalGains={capitalGains}
           />
         </div>
       </div>

@@ -9,17 +9,27 @@ interface TransactionListProps {
   securityId: Id<"securities">;
   transactions: Array<{
     _id: Id<"transactions">;
-    date: number;
+    date: string;
     numShares: number;
     totalPriceCents: number;
     commissionFeeCents?: number;
     transactionType: string;
+  }>;
+  capitalGains: Array<{
+    transactionId: string;
+    date: string;
+    numShares: number;
+    sellPricePerShareCents: number;
+    acbPerShareCents: number;
+    capitalGainLossCents: number;
+    currency: string;
   }>;
 }
 
 export function TransactionList({
   securityId,
   transactions,
+  capitalGains,
 }: TransactionListProps) {
   const createTransaction = useMutation(api.transactions.createTransaction);
   const updateTransaction = useMutation(api.transactions.updateTransaction);
@@ -127,6 +137,11 @@ export function TransactionList({
     if (confirm("Are you sure you want to delete this transaction?")) {
       await deleteTransaction({ transactionId: id });
     }
+  };
+
+  // Helper function to find capital gains data for a transaction
+  const getCapitalGainsForTransaction = (transactionId: string) => {
+    return capitalGains.find((cg) => cg.transactionId === transactionId);
   };
 
   return (
@@ -255,53 +270,85 @@ export function TransactionList({
       )}
 
       <div className="space-y-2">
-        {transactions.map((transaction) => (
-          <div key={transaction._id} className="p-2 border rounded text-sm">
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <div className="text-gray-600 dark:text-gray-400">
-                  {new Date(transaction.date).toISOString().split("T")[0]}
+        {transactions.map((transaction) => {
+          const capitalGainsData = getCapitalGainsForTransaction(
+            transaction._id,
+          );
+          const isSellTransaction = transaction.transactionType === "sell";
+
+          return (
+            <div key={transaction._id} className="p-3 border rounded text-sm">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="text-gray-600 dark:text-gray-400">
+                    {new Date(transaction.date).toISOString().split("T")[0]}
+                  </div>
+                  <div className="text-gray-600 dark:text-gray-400">
+                    {transaction.transactionType
+                      .replace(/_/g, " ")
+                      .toUpperCase()}
+                  </div>
+                  <div>
+                    {Math.abs(transaction.numShares)} shares @{" "}
+                    {formatCurrency(
+                      (transaction.totalPriceCents -
+                        (transaction.commissionFeeCents || 0)) /
+                        Math.abs(transaction.numShares),
+                    )}{" "}
+                    per share
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    Total: {formatCurrency(transaction.totalPriceCents)}
+                    {transaction.commissionFeeCents &&
+                      transaction.commissionFeeCents > 0 && (
+                        <span>
+                          {" "}
+                          (Fee: {formatCurrency(transaction.commissionFeeCents)}
+                          )
+                        </span>
+                      )}
+                  </div>
+
+                  {/* Show capital gains/losses for sell transactions */}
+                  {isSellTransaction && capitalGainsData && (
+                    <>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        {capitalGainsData.capitalGainLossCents >= 0
+                          ? "Capital Gain:"
+                          : "Capital Loss:"}{" "}
+                        <span
+                          className={`font-mono ${
+                            capitalGainsData.capitalGainLossCents >= 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {formatCurrency(
+                            Math.abs(capitalGainsData.capitalGainLossCents),
+                          )}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div className="text-gray-600 dark:text-gray-400">
-                  {transaction.transactionType.replace(/_/g, " ").toUpperCase()}
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => handleEdit(transaction)}
+                    className="text-blue-500 hover:text-blue-700 text-xs focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded cursor-pointer"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(transaction._id)}
+                    className="text-red-500 hover:text-red-700 text-xs focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded cursor-pointer"
+                  >
+                    Delete
+                  </button>
                 </div>
-                <div>
-                  {transaction.numShares} shares @{" "}
-                  {formatCurrency(
-                    (transaction.totalPriceCents -
-                      (transaction.commissionFeeCents || 0)) /
-                      transaction.numShares,
-                  )}{" "}
-                  per share
-                </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Total: {formatCurrency(transaction.totalPriceCents)}
-                  {transaction.commissionFeeCents &&
-                    transaction.commissionFeeCents > 0 && (
-                      <span>
-                        {" "}
-                        (Fee: {formatCurrency(transaction.commissionFeeCents)})
-                      </span>
-                    )}
-                </div>
-              </div>
-              <div className="flex gap-1">
-                <button
-                  onClick={() => handleEdit(transaction)}
-                  className="text-blue-500 hover:text-blue-700 text-xs focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded cursor-pointer"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(transaction._id)}
-                  className="text-red-500 hover:text-red-700 text-xs focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded cursor-pointer"
-                >
-                  Delete
-                </button>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
