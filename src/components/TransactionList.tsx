@@ -3,6 +3,7 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { formatCurrency } from "../utils/currency";
 import { useState } from "react";
+import { CurrencyInput } from "./CurrencyInput";
 
 interface TransactionListProps {
   securityId: Id<"securities">;
@@ -28,17 +29,17 @@ export function TransactionList({
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
     numShares: "",
-    totalPrice: "",
-    commissionFee: "0",
+    totalPriceCents: "0",
+    commissionFeeCents: "0",
     transactionType: "buy" as const,
   });
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     const numShares = parseFloat(formData.numShares);
-    const totalPriceCents = Math.round(parseFloat(formData.totalPrice) * 100);
-    const commissionFeeCents = formData.commissionFee
-      ? Math.round(parseFloat(formData.commissionFee) * 100)
+    const totalPriceCents = parseInt(formData.totalPriceCents, 10);
+    const commissionFeeCents = formData.commissionFeeCents
+      ? parseInt(formData.commissionFeeCents, 10)
       : undefined;
     // Store date as ISO8601 string in UTC
     const date = new Date(formData.date + "T00:00:00.000Z").toISOString();
@@ -55,8 +56,8 @@ export function TransactionList({
       setFormData({
         date: new Date().toISOString().split("T")[0],
         numShares: "",
-        totalPrice: "",
-        commissionFee: "0",
+        totalPriceCents: "0",
+        commissionFeeCents: "0",
         transactionType: "buy",
       });
       setShowForm(false);
@@ -68,9 +69,9 @@ export function TransactionList({
     setFormData({
       date: new Date(transaction.date).toISOString().split("T")[0],
       numShares: transaction.numShares.toString(),
-      totalPrice: (transaction.totalPriceCents / 100).toString(),
-      commissionFee: transaction.commissionFeeCents
-        ? (transaction.commissionFeeCents / 100).toString()
+      totalPriceCents: transaction.totalPriceCents.toString(),
+      commissionFeeCents: transaction.commissionFeeCents
+        ? transaction.commissionFeeCents.toString()
         : "0",
       transactionType: transaction.transactionType,
     });
@@ -82,9 +83,9 @@ export function TransactionList({
     if (!editingId) return;
 
     const numShares = parseFloat(formData.numShares);
-    const totalPriceCents = Math.round(parseFloat(formData.totalPrice) * 100);
-    const commissionFeeCents = formData.commissionFee
-      ? Math.round(parseFloat(formData.commissionFee) * 100)
+    const totalPriceCents = parseInt(formData.totalPriceCents, 10);
+    const commissionFeeCents = formData.commissionFeeCents
+      ? parseInt(formData.commissionFeeCents, 10)
       : undefined;
     // Store date as ISO8601 string in UTC
     const date = new Date(formData.date + "T00:00:00.000Z").toISOString();
@@ -101,8 +102,8 @@ export function TransactionList({
       setFormData({
         date: new Date().toISOString().split("T")[0],
         numShares: "",
-        totalPrice: "",
-        commissionFee: "0",
+        totalPriceCents: "0",
+        commissionFeeCents: "0",
         transactionType: "buy",
       });
       setShowForm(false);
@@ -116,8 +117,8 @@ export function TransactionList({
     setFormData({
       date: new Date().toISOString().split("T")[0],
       numShares: "",
-      totalPrice: "",
-      commissionFee: "0",
+      totalPriceCents: "0",
+      commissionFeeCents: "0",
       transactionType: "buy",
     });
   };
@@ -185,49 +186,27 @@ export function TransactionList({
               required
             />
           </div>
-          <div>
-            <label
-              htmlFor="total-price"
-              className="block text-sm font-medium mb-1"
-            >
-              Total Price
-            </label>
-            <input
-              id="total-price"
-              type="number"
-              step="0.01"
-              value={formData.totalPrice}
-              onChange={(e) =>
-                setFormData({ ...formData, totalPrice: e.target.value })
-              }
-              placeholder="Enter total price"
-              inputMode="decimal"
-              enterKeyHint="next"
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="commission-fee"
-              className="block text-sm font-medium mb-1"
-            >
-              Commission Fee (Optional)
-            </label>
-            <input
-              id="commission-fee"
-              type="number"
-              step="0.01"
-              value={formData.commissionFee}
-              onChange={(e) =>
-                setFormData({ ...formData, commissionFee: e.target.value })
-              }
-              placeholder="Enter commission fee"
-              inputMode="decimal"
-              enterKeyHint="next"
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+          <CurrencyInput
+            id="total-price"
+            label="Total Price"
+            value={formData.totalPriceCents}
+            onChange={(value) =>
+              setFormData({ ...formData, totalPriceCents: value })
+            }
+            placeholder="0.00"
+            enterKeyHint="next"
+            required
+          />
+          <CurrencyInput
+            id="commission-fee"
+            label="Commission Fee (Optional)"
+            value={formData.commissionFeeCents}
+            onChange={(value) =>
+              setFormData({ ...formData, commissionFeeCents: value })
+            }
+            placeholder="0.00"
+            enterKeyHint="next"
+          />
           <div>
             <label
               htmlFor="transaction-type"
