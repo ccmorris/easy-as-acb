@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { api } from "./_generated/api";
 
 /**
  * Create a new transaction for a security.
@@ -87,16 +88,50 @@ export const listTransactionsBySecurity = query({
         v.literal("reinvested_capital_gains_distribution"),
       ),
       sortOrder: v.number(),
+      capitalGains: v.optional(
+        v.object({
+          sellPricePerShareCents: v.number(),
+          acbPerShareCents: v.number(),
+          capitalGainLossCents: v.number(),
+        }),
+      ),
     }),
   ),
   handler: async (ctx, args) => {
-    return await ctx.db
+    const security = await ctx.db.get(args.securityId);
+    if (!security) {
+      throw new Error("Security not found");
+    }
+
+    const transactions = await ctx.db
       .query("transactions")
       .withIndex("by_security_and_sort", (q) =>
         q.eq("securityId", args.securityId),
       )
       .order("asc")
       .collect();
+
+    // Get capital gains data using the calculateACB helper
+    const acbResult = await ctx.runQuery(api.calculations.calculateACB, {
+      transactions,
+      currency: security.currency,
+    });
+
+    // Create a map of transaction ID to capital gains data
+    const capitalGainsMap = new Map();
+    for (const cg of acbResult.capitalGainsLosses) {
+      capitalGainsMap.set(cg.transactionId, {
+        sellPricePerShareCents: cg.sellPricePerShareCents,
+        acbPerShareCents: cg.acbPerShareCents,
+        capitalGainLossCents: cg.capitalGainLossCents,
+      });
+    }
+
+    // Add capital gains data to transactions
+    return transactions.map((transaction) => ({
+      ...transaction,
+      capitalGains: capitalGainsMap.get(transaction._id) || undefined,
+    }));
   },
 });
 

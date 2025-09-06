@@ -3,6 +3,100 @@ import { v } from "convex/values";
 import { api } from "./_generated/api";
 
 /**
+ * Helper function to calculate ACB from an array of transactions.
+ * Returns the final totals and all capital gains data for sell transactions.
+ */
+function calculateACBHelper(
+  transactions: Array<{
+    _id: any;
+    date: string;
+    numShares: number;
+    totalPriceCents: number;
+    commissionFeeCents?: number;
+    transactionType: string;
+  }>,
+  currency: string,
+) {
+  let runningShares = 0;
+  let runningACBCents = 0;
+  const capitalGainsLosses: Array<{
+    transactionId: any;
+    date: string;
+    numShares: number;
+    sellPricePerShareCents: number;
+    acbPerShareCents: number;
+    capitalGainLossCents: number;
+    currency: string;
+  }> = [];
+
+  for (const transaction of transactions) {
+    const {
+      numShares,
+      totalPriceCents,
+      commissionFeeCents = 0,
+      transactionType,
+    } = transaction;
+
+    if (transactionType === "sell") {
+      // Calculate ACB per share at time of sale
+      const acbPerShareCents =
+        runningShares > 0 ? runningACBCents / runningShares : 0;
+      const sellPricePerShareCents =
+        (totalPriceCents - commissionFeeCents) / numShares;
+      const capitalGainLossCents =
+        (sellPricePerShareCents - acbPerShareCents) * numShares;
+
+      capitalGainsLosses.push({
+        transactionId: transaction._id,
+        date: transaction.date,
+        numShares,
+        sellPricePerShareCents,
+        acbPerShareCents,
+        capitalGainLossCents,
+        currency,
+      });
+    }
+
+    // Update running totals
+    switch (transactionType) {
+      case "buy":
+      case "reinvested_dividend":
+      case "reinvested_capital_gains_distribution":
+        runningShares += numShares;
+        runningACBCents += totalPriceCents + commissionFeeCents;
+        break;
+
+      case "sell":
+        if (runningShares > 0) {
+          const acbPerShare = runningACBCents / runningShares;
+          const acbForSoldShares = acbPerShare * numShares;
+          runningACBCents -= acbForSoldShares;
+        }
+        runningShares -= numShares;
+        break;
+
+      case "return_of_capital":
+        if (runningShares > 0) {
+          const acbPerShare = runningACBCents / runningShares;
+          const acbReduction = Math.min(
+            acbPerShare * numShares,
+            runningACBCents,
+          );
+          runningACBCents -= acbReduction;
+        }
+        break;
+    }
+  }
+
+  return {
+    totalShares: runningShares,
+    totalACBCents: runningACBCents,
+    acbPerShareCents: runningShares > 0 ? runningACBCents / runningShares : 0,
+    capitalGainsLosses,
+  };
+}
+
+/**
  * Get security summary including total shares, total ACB, and ACB per share.
  */
 export const getSecuritySummary = query({
@@ -29,56 +123,12 @@ export const getSecuritySummary = query({
       .order("asc")
       .collect();
 
-    let totalShares = 0;
-    let totalACBCents = 0;
-
-    for (const transaction of transactions) {
-      const {
-        numShares,
-        totalPriceCents,
-        commissionFeeCents = 0,
-        transactionType,
-      } = transaction;
-
-      switch (transactionType) {
-        case "buy":
-        case "reinvested_dividend":
-        case "reinvested_capital_gains_distribution":
-          // Add to position and ACB
-          totalShares += numShares;
-          totalACBCents += totalPriceCents + commissionFeeCents;
-          break;
-
-        case "sell":
-          // Reduce position proportionally
-          if (totalShares > 0) {
-            const acbPerShare = totalACBCents / totalShares;
-            const acbForSoldShares = acbPerShare * numShares;
-            totalACBCents -= acbForSoldShares;
-          }
-          totalShares -= numShares;
-          break;
-
-        case "return_of_capital":
-          // Reduce ACB but not shares
-          if (totalShares > 0) {
-            const acbPerShare = totalACBCents / totalShares;
-            const acbReduction = Math.min(
-              acbPerShare * numShares,
-              totalACBCents,
-            );
-            totalACBCents -= acbReduction;
-          }
-          break;
-      }
-    }
-
-    const acbPerShareCents = totalShares > 0 ? totalACBCents / totalShares : 0;
+    const result = calculateACBHelper(transactions, security.currency);
 
     return {
-      totalShares,
-      totalACBCents,
-      acbPerShareCents,
+      totalShares: result.totalShares,
+      totalACBCents: result.totalACBCents,
+      acbPerShareCents: result.acbPerShareCents,
       currency: security.currency,
     };
   },
@@ -116,74 +166,56 @@ export const getCapitalGainsLosses = query({
       .order("asc")
       .collect();
 
-    const sellTransactions = transactions.filter(
-      (t) => t.transactionType === "sell",
-    );
-    const capitalGainsLosses = [];
+    const result = calculateACBHelper(transactions, security.currency);
 
-    let runningShares = 0;
-    let runningACBCents = 0;
+    return result.capitalGainsLosses;
+  },
+});
 
-    for (const transaction of transactions) {
-      const {
-        numShares,
-        totalPriceCents,
-        commissionFeeCents = 0,
-        transactionType,
-      } = transaction;
-
-      if (transactionType === "sell") {
-        // Calculate ACB per share at time of sale
-        const acbPerShareCents =
-          runningShares > 0 ? runningACBCents / runningShares : 0;
-        const sellPricePerShareCents =
-          (totalPriceCents - commissionFeeCents) / numShares;
-        const capitalGainLossCents =
-          (sellPricePerShareCents - acbPerShareCents) * numShares;
-
-        capitalGainsLosses.push({
-          transactionId: transaction._id,
-          date: transaction.date,
-          numShares,
-          sellPricePerShareCents,
-          acbPerShareCents,
-          capitalGainLossCents,
-          currency: security.currency,
-        });
-      }
-
-      // Update running totals for next transaction
-      switch (transactionType) {
-        case "buy":
-        case "reinvested_dividend":
-        case "reinvested_capital_gains_distribution":
-          runningShares += numShares;
-          runningACBCents += totalPriceCents + commissionFeeCents;
-          break;
-
-        case "sell":
-          if (runningShares > 0) {
-            const acbPerShare = runningACBCents / runningShares;
-            const acbForSoldShares = acbPerShare * numShares;
-            runningACBCents -= acbForSoldShares;
-          }
-          runningShares -= numShares;
-          break;
-
-        case "return_of_capital":
-          if (runningShares > 0) {
-            const acbPerShare = runningACBCents / runningShares;
-            const acbReduction = Math.min(
-              acbPerShare * numShares,
-              runningACBCents,
-            );
-            runningACBCents -= acbReduction;
-          }
-          break;
-      }
-    }
-
-    return capitalGainsLosses;
+/**
+ * Calculate ACB from an array of transactions (internal helper query).
+ */
+export const calculateACB = query({
+  args: {
+    transactions: v.array(
+      v.object({
+        _id: v.id("transactions"),
+        _creationTime: v.number(),
+        securityId: v.id("securities"),
+        date: v.string(),
+        numShares: v.number(),
+        totalPriceCents: v.number(),
+        commissionFeeCents: v.optional(v.number()),
+        transactionType: v.union(
+          v.literal("buy"),
+          v.literal("sell"),
+          v.literal("return_of_capital"),
+          v.literal("reinvested_dividend"),
+          v.literal("reinvested_capital_gains_distribution"),
+        ),
+        sortOrder: v.number(),
+      }),
+    ),
+    currency: v.string(),
+  },
+  returns: v.object({
+    totalShares: v.number(),
+    totalACBCents: v.number(),
+    acbPerShareCents: v.number(),
+    capitalGainsLosses: v.array(
+      v.object({
+        transactionId: v.id("transactions"),
+        date: v.string(),
+        numShares: v.number(),
+        sellPricePerShareCents: v.number(),
+        acbPerShareCents: v.number(),
+        capitalGainLossCents: v.number(),
+        currency: v.string(),
+      }),
+    ),
+  }),
+  handler: async (ctx, args) => {
+    return calculateACBHelper(args.transactions, args.currency);
   },
 });
 

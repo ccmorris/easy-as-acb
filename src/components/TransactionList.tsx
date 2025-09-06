@@ -14,22 +14,17 @@ interface TransactionListProps {
     totalPriceCents: number;
     commissionFeeCents?: number;
     transactionType: string;
-  }>;
-  capitalGains: Array<{
-    transactionId: string;
-    date: string;
-    numShares: number;
-    sellPricePerShareCents: number;
-    acbPerShareCents: number;
-    capitalGainLossCents: number;
-    currency: string;
+    capitalGains?: {
+      sellPricePerShareCents: number;
+      acbPerShareCents: number;
+      capitalGainLossCents: number;
+    };
   }>;
 }
 
 export function TransactionList({
   securityId,
   transactions,
-  capitalGains,
 }: TransactionListProps) {
   const createTransaction = useMutation(api.transactions.createTransaction);
   const updateTransaction = useMutation(api.transactions.updateTransaction);
@@ -137,11 +132,6 @@ export function TransactionList({
     if (confirm("Are you sure you want to delete this transaction?")) {
       await deleteTransaction({ transactionId: id });
     }
-  };
-
-  // Helper function to find capital gains data for a transaction
-  const getCapitalGainsForTransaction = (transactionId: string) => {
-    return capitalGains.find((cg) => cg.transactionId === transactionId);
   };
 
   return (
@@ -271,9 +261,6 @@ export function TransactionList({
 
       <div className="space-y-2">
         {transactions.map((transaction) => {
-          const capitalGainsData = getCapitalGainsForTransaction(
-            transaction._id,
-          );
           const isSellTransaction = transaction.transactionType === "sell";
 
           return (
@@ -310,21 +297,23 @@ export function TransactionList({
                   </div>
 
                   {/* Show capital gains/losses for sell transactions */}
-                  {isSellTransaction && capitalGainsData && (
+                  {isSellTransaction && transaction.capitalGains && (
                     <>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {capitalGainsData.capitalGainLossCents >= 0
+                        {transaction.capitalGains.capitalGainLossCents >= 0
                           ? "Capital Gain:"
                           : "Capital Loss:"}{" "}
                         <span
                           className={`font-mono ${
-                            capitalGainsData.capitalGainLossCents >= 0
+                            transaction.capitalGains.capitalGainLossCents >= 0
                               ? "text-green-600"
                               : "text-red-600"
                           }`}
                         >
                           {formatCurrency(
-                            Math.abs(capitalGainsData.capitalGainLossCents),
+                            Math.abs(
+                              transaction.capitalGains.capitalGainLossCents,
+                            ),
                           )}
                         </span>
                       </div>

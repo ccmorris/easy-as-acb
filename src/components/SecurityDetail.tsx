@@ -23,16 +23,12 @@ export function SecurityDetail() {
   const transactions = useQuery(api.transactions.listTransactionsBySecurity, {
     securityId: securityId as Id<"securities">,
   });
-  const capitalGains = useQuery(api.calculations.getCapitalGainsLosses, {
-    securityId: securityId as Id<"securities">,
-  });
 
   if (
     portfolio === undefined ||
     security === undefined ||
     summary === undefined ||
-    transactions === undefined ||
-    capitalGains === undefined
+    transactions === undefined
   ) {
     return <div>Loading...</div>;
   }
@@ -66,7 +62,6 @@ export function SecurityDetail() {
           <TransactionList
             securityId={securityId as Id<"securities">}
             transactions={transactions}
-            capitalGains={capitalGains}
           />
         </div>
       </div>
