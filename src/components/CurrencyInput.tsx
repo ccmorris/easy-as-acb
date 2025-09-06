@@ -44,25 +44,6 @@ export function CurrencyInput({
     });
   };
 
-  // Convert display format to cents
-  const displayToCents = (display: string): string => {
-    if (!display) return "0";
-    // Remove any non-numeric characters except decimal point
-    let cleanValue = display.replace(/[^\d.]/g, "");
-
-    // Handle multiple decimal points by keeping only the first one
-    const parts = cleanValue.split(".");
-    if (parts.length > 2) {
-      cleanValue = parts[0] + "." + parts.slice(1).join("");
-    }
-
-    // Convert to number and then to cents
-    const numValue = parseFloat(cleanValue);
-    if (isNaN(numValue)) return "0";
-
-    return Math.round(numValue * 100).toString();
-  };
-
   // Format display value with progressive formatting as user types
   const formatDisplayValue = (input: string): string => {
     if (!input) return "";

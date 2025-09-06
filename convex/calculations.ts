@@ -214,7 +214,7 @@ export const calculateACB = query({
       }),
     ),
   }),
-  handler: async (ctx, args) => {
+  handler: async (_ctx, args) => {
     return calculateACBHelper(args.transactions, args.currency);
   },
 });
