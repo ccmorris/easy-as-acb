@@ -1,4 +1,5 @@
 import { formatCurrency } from "../utils/currency";
+import { Card } from "./ui";
 
 interface CapitalGainsReportProps {
   capitalGains: Array<{
@@ -15,30 +16,32 @@ interface CapitalGainsReportProps {
 export function CapitalGainsReport({ capitalGains }: CapitalGainsReportProps) {
   if (capitalGains.length === 0) {
     return (
-      <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg">
-        <h3 className="text-lg font-semibold mb-3">Capital Gains/Losses</h3>
-        <p className="text-gray-600 dark:text-gray-400">
-          No sell transactions found.
-        </p>
-      </div>
+      <Card>
+        <h3 className="text-lg font-semibold mb-3 text-gray-900">
+          Capital Gains/Losses
+        </h3>
+        <p className="text-gray-600">No sell transactions found.</p>
+      </Card>
     );
   }
 
   return (
-    <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg">
-      <h3 className="text-lg font-semibold mb-3">Capital Gains/Losses</h3>
+    <Card>
+      <h3 className="text-lg font-semibold mb-3 text-gray-900">
+        Capital Gains/Losses
+      </h3>
       <div className="space-y-3">
         {capitalGains.map((cg) => (
           <div
             key={cg.transactionId}
-            className="bg-white dark:bg-slate-700 p-3 rounded border"
+            className="bg-gray-50 p-3 rounded border border-gray-200"
           >
             <div className="flex justify-between items-start mb-2">
               <div>
                 <div className="font-medium">
                   {new Date(cg.date).toISOString().split("T")[0]}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-gray-600">
                   {Math.abs(cg.numShares)} shares sold
                 </div>
               </div>
@@ -46,8 +49,8 @@ export function CapitalGainsReport({ capitalGains }: CapitalGainsReportProps) {
                 <div
                   className={`font-mono text-lg font-semibold ${
                     cg.capitalGainLossCents >= 0
-                      ? "text-green-600"
-                      : "text-red-600"
+                      ? "text-success"
+                      : "text-danger"
                   }`}
                 >
                   {formatCurrency(cg.capitalGainLossCents)}
@@ -59,15 +62,13 @@ export function CapitalGainsReport({ capitalGains }: CapitalGainsReportProps) {
             </div>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <div className="text-gray-600 dark:text-gray-400">
-                  Sell Price
-                </div>
+                <div className="text-gray-600">Sell Price</div>
                 <div className="font-mono">
                   {formatCurrency(cg.sellPricePerShareCents)} per share
                 </div>
               </div>
               <div>
-                <div className="text-gray-600 dark:text-gray-400">ACB</div>
+                <div className="text-gray-600">ACB</div>
                 <div className="font-mono">
                   {formatCurrency(cg.acbPerShareCents)} per share
                 </div>

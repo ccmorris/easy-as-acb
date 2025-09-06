@@ -5,6 +5,8 @@ import { formatCurrency } from "../utils/currency";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { usePrefetchSecurityDetail } from "../hooks/usePrefetch";
+import { Plus, Trash2, X, ArrowLeft } from "lucide-react";
+import { Button, Input, Card, Select, IconButton } from "./ui";
 
 export function SecurityList() {
   const { portfolioId } = useParams<{ portfolioId: string }>();
@@ -65,37 +67,36 @@ export function SecurityList() {
       <div className="mb-6">
         <button
           onClick={() => navigate("/")}
-          className="text-blue-500 hover:text-blue-700 mb-2 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded cursor-pointer"
+          className="text-primary hover:text-primary-hover mb-2 focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded cursor-pointer flex items-center gap-2"
+          title="Back to Portfolios"
         >
-          ← Back to Portfolios
+          <ArrowLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">Back to Portfolios</span>
         </button>
-        <h2 className="text-2xl font-bold">{portfolio.name}</h2>
+        <h2 className="text-2xl font-bold text-text">{portfolio.name}</h2>
       </div>
 
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xl font-semibold">Securities</h3>
-        <button
+        <h3 className="text-xl font-semibold text-text">Securities</h3>
+        <Button
           onClick={() => setShowForm(!showForm)}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors cursor-pointer"
+          variant="primary"
+          size="sm"
+          title={showForm ? "Cancel" : "Create New Security"}
         >
-          {showForm ? "Cancel" : "New Security"}
-        </button>
+          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+          <span className="hidden sm:inline">
+            {showForm ? "Cancel" : "New Security"}
+          </span>
+        </Button>
       </div>
 
       {showForm && (
-        <form
-          onSubmit={handleCreate}
-          className="mb-6 p-4 bg-slate-100 dark:bg-slate-800 rounded-lg space-y-3"
-        >
-          <div>
-            <label
-              htmlFor="security-name"
-              className="block text-sm font-medium mb-1"
-            >
-              Security Name
-            </label>
-            <input
+        <Card className="mb-6">
+          <form onSubmit={handleCreate} className="space-y-4">
+            <Input
               id="security-name"
+              label="Security Name"
               type="text"
               value={formData.name}
               onChange={(e) =>
@@ -103,20 +104,12 @@ export function SecurityList() {
               }
               placeholder="Enter security name"
               enterKeyHint="next"
-              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               autoFocus
               required
             />
-          </div>
-          <div>
-            <label
-              htmlFor="ticker-symbol"
-              className="block text-sm font-medium mb-1"
-            >
-              Ticker Symbol
-            </label>
-            <input
+            <Input
               id="ticker-symbol"
+              label="Ticker Symbol"
               type="text"
               value={formData.ticker}
               onChange={(e) =>
@@ -124,37 +117,32 @@ export function SecurityList() {
               }
               placeholder="Enter ticker symbol"
               enterKeyHint="next"
-              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             />
-          </div>
-          <div>
-            <label
-              htmlFor="currency"
-              className="block text-sm font-medium mb-1"
-            >
-              Currency
-            </label>
-            <select
+            <Select
               id="currency"
+              label="Currency"
               value={formData.currency}
               onChange={(e) =>
                 setFormData({ ...formData, currency: e.target.value })
               }
-              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              options={[
+                { value: "CAD", label: "CAD" },
+                { value: "USD", label: "USD" },
+                { value: "EUR", label: "EUR" },
+              ]}
+            />
+            <Button
+              type="submit"
+              variant="success"
+              size="sm"
+              title="Create Security"
             >
-              <option value="CAD">CAD</option>
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-            </select>
-          </div>
-          <button
-            type="submit"
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors cursor-pointer"
-          >
-            Create Security
-          </button>
-        </form>
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Create Security</span>
+            </Button>
+          </form>
+        </Card>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -163,9 +151,9 @@ export function SecurityList() {
             (s) => s.securityId === security._id,
           );
           return (
-            <div
+            <Card
               key={security._id}
-              className="p-4 border rounded-lg cursor-pointer hover:border-blue-500 hover:shadow-md transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              interactive
               onClick={() =>
                 navigate(`/portfolio/${portfolioId}/security/${security._id}`)
               }
@@ -187,20 +175,24 @@ export function SecurityList() {
             >
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h4 className="font-semibold text-lg">{security.name}</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <h4 className="font-semibold text-lg text-text">
+                    {security.name}
+                  </h4>
+                  <p className="text-sm text-gray-600">
                     {security.ticker} ({security.currency})
                   </p>
                 </div>
-                <button
+                <IconButton
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDelete(security._id);
                   }}
-                  className="text-red-500 hover:text-red-700 text-sm focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded cursor-pointer"
+                  variant="danger"
+                  size="md"
+                  title="Delete Security"
                 >
-                  Delete
-                </button>
+                  <Trash2 className="w-5 h-5" />
+                </IconButton>
               </div>
               {summary && (
                 <div className="text-sm space-y-1">
@@ -227,7 +219,7 @@ export function SecurityList() {
                   </div>
                 </div>
               )}
-            </div>
+            </Card>
           );
         })}
       </div>

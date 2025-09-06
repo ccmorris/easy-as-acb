@@ -129,7 +129,10 @@ export function CurrencyInput({
   return (
     <div>
       {label && (
-        <label htmlFor={id} className="block text-sm font-medium mb-1">
+        <label
+          htmlFor={id}
+          className="block text-sm font-medium mb-1 text-text"
+        >
           {label}
         </label>
       )}
@@ -149,7 +152,7 @@ export function CurrencyInput({
           disabled={disabled}
           enterKeyHint={enterKeyHint}
           inputMode="decimal"
-          className={`pl-8 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${className}`}
+          className={`pl-8 pr-3 py-2 w-full border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${className}`}
         />
       </div>
     </div>

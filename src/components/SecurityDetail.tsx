@@ -4,6 +4,7 @@ import { Id } from "../../convex/_generated/dataModel";
 import { useParams, useNavigate } from "react-router-dom";
 import { TransactionList } from "./TransactionList";
 import { SecuritySummary } from "./SecuritySummary";
+import { ArrowLeft } from "lucide-react";
 
 export const SecurityDetail = function SecurityDetail() {
   const { portfolioId, securityId } = useParams<{
@@ -32,11 +33,15 @@ export const SecurityDetail = function SecurityDetail() {
       <div className="mb-6">
         <button
           onClick={() => navigate(`/portfolio/${portfolioId}`)}
-          className="text-blue-500 hover:text-blue-700 mb-2 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded cursor-pointer"
+          className="text-primary hover:text-primary-hover mb-2 focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded cursor-pointer flex items-center gap-2"
+          title={`Back to ${data.portfolio.name}`}
         >
-          ← Back to {data.portfolio.name}
+          <ArrowLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">
+            Back to {data.portfolio.name}
+          </span>
         </button>
-        <h2 className="text-2xl font-bold">
+        <h2 className="text-2xl font-bold text-text">
           {data.security.name} ({data.security.ticker})
         </h2>
       </div>
@@ -50,11 +55,11 @@ export const SecurityDetail = function SecurityDetail() {
               currency={data.security.currency}
             />
           ) : (
-            <div className="p-4 border rounded-lg">
+            <div className="bg-white border border-gray-200 rounded-xl p-6">
               <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                <div className="h-4 bg-gray-100 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-gray-100 rounded w-1/2 mb-2"></div>
+                <div className="h-4 bg-gray-100 rounded w-2/3"></div>
               </div>
             </div>
           )}

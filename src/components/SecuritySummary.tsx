@@ -1,4 +1,5 @@
 import { formatCurrency } from "../utils/currency";
+import { Card } from "./ui";
 
 interface SecuritySummaryProps {
   summary: {
@@ -11,26 +12,30 @@ interface SecuritySummaryProps {
 
 export function SecuritySummary({ summary, currency }: SecuritySummaryProps) {
   return (
-    <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg">
-      <h3 className="text-lg font-semibold mb-3">Security Summary</h3>
+    <Card>
+      <h3 className="text-lg font-semibold mb-3 text-gray-900">
+        Security Summary
+      </h3>
       <div className="space-y-2">
         <div className="flex justify-between">
-          <span>Total Shares:</span>
-          <span className="font-mono">{summary.totalShares.toFixed(6)}</span>
+          <span className="text-gray-900">Total Shares:</span>
+          <span className="font-mono text-gray-900">
+            {summary.totalShares.toFixed(6)}
+          </span>
         </div>
         <div className="flex justify-between">
-          <span>Total ACB:</span>
-          <span className="font-mono">
+          <span className="text-gray-900">Total ACB:</span>
+          <span className="font-mono text-gray-900">
             {formatCurrency(summary.totalACBCents, currency)}
           </span>
         </div>
         <div className="flex justify-between">
-          <span>ACB per Share:</span>
-          <span className="font-mono">
+          <span className="text-gray-900">ACB per Share:</span>
+          <span className="font-mono text-gray-900">
             {formatCurrency(summary.acbPerShareCents, currency)}
           </span>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

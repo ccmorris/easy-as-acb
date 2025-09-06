@@ -3,6 +3,8 @@ import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Plus, Trash2, X } from "lucide-react";
+import { Button, Input, Card, IconButton } from "./ui";
 
 export function PortfolioList() {
   const portfolios = useQuery(api.portfolios.listPortfolios);
@@ -34,53 +36,52 @@ export function PortfolioList() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Portfolios</h2>
-        <button
+        <h2 className="text-2xl font-bold text-text">Portfolios</h2>
+        <Button
           onClick={() => setShowForm(!showForm)}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors cursor-pointer"
+          variant="primary"
+          size="sm"
+          title={showForm ? "Cancel" : "Create New Portfolio"}
         >
-          {showForm ? "Cancel" : "New Portfolio"}
-        </button>
+          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+          <span className="hidden sm:inline">
+            {showForm ? "Cancel" : "New Portfolio"}
+          </span>
+        </Button>
       </div>
 
       {showForm && (
-        <form
-          onSubmit={handleCreate}
-          className="mb-6 p-4 bg-slate-100 dark:bg-slate-800 rounded-lg"
-        >
-          <div>
-            <label
-              htmlFor="portfolio-name"
-              className="block text-sm font-medium mb-1"
-            >
-              Portfolio Name
-            </label>
-            <input
+        <Card className="mb-6">
+          <form onSubmit={handleCreate} className="space-y-4">
+            <Input
               id="portfolio-name"
+              label="Portfolio Name"
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ name: e.target.value })}
               placeholder="Enter portfolio name"
               enterKeyHint="done"
-              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               autoFocus
               required
             />
-          </div>
-          <button
-            type="submit"
-            className="mt-3 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors cursor-pointer"
-          >
-            Create Portfolio
-          </button>
-        </form>
+            <Button
+              type="submit"
+              variant="success"
+              size="sm"
+              title="Create Portfolio"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Create Portfolio</span>
+            </Button>
+          </form>
+        </Card>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {portfolios.map((portfolio) => (
-          <div
+          <Card
             key={portfolio._id}
-            className="p-4 border rounded-lg cursor-pointer hover:border-blue-500 hover:shadow-md transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            interactive
             onClick={() => navigate(`/portfolio/${portfolio._id}`)}
             tabIndex={0}
             onKeyDown={(e) => {
@@ -92,8 +93,10 @@ export function PortfolioList() {
           >
             <div className="flex justify-between items-start">
               <div>
-                <h3 className="font-semibold text-lg">{portfolio.name}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <h3 className="font-semibold text-lg text-text">
+                  {portfolio.name}
+                </h3>
+                <p className="text-sm text-gray-600">
                   Created{" "}
                   {
                     new Date(portfolio._creationTime)
@@ -102,17 +105,19 @@ export function PortfolioList() {
                   }
                 </p>
               </div>
-              <button
+              <IconButton
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDelete(portfolio._id);
                 }}
-                className="text-red-500 hover:text-red-700 text-sm focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded cursor-pointer"
+                variant="danger"
+                size="md"
+                title="Delete Portfolio"
               >
-                Delete
-              </button>
+                <Trash2 className="w-5 h-5" />
+              </IconButton>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     </div>

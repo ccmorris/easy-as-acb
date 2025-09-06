@@ -4,6 +4,8 @@ import { Id } from "../../convex/_generated/dataModel";
 import { formatCurrency } from "../utils/currency";
 import { useState } from "react";
 import { CurrencyInput } from "./CurrencyInput";
+import { Plus, Trash2, X, Edit, Save } from "lucide-react";
+import { Button, Input, Select, IconButton } from "./ui";
 
 interface TransactionListProps {
   securityId: Id<"securities">;
@@ -137,13 +139,18 @@ export function TransactionList({
   return (
     <div>
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Transactions</h3>
-        <button
+        <h3 className="text-lg font-semibold text-text">Transactions</h3>
+        <Button
           onClick={() => setShowForm(!showForm)}
-          className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors cursor-pointer"
+          variant="primary"
+          size="sm"
+          title={showForm ? "Cancel" : "Add New Transaction"}
         >
-          {showForm ? "Cancel" : "New Transaction"}
-        </button>
+          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+          <span className="hidden sm:inline">
+            {showForm ? "Cancel" : "New Transaction"}
+          </span>
+        </Button>
       </div>
 
       {showForm && (
@@ -151,46 +158,28 @@ export function TransactionList({
           onSubmit={editingId ? handleUpdate : handleCreate}
           className="mb-4 space-y-3"
         >
-          <div>
-            <label
-              htmlFor="transaction-date"
-              className="block text-sm font-medium mb-1"
-            >
-              Transaction Date
-            </label>
-            <input
-              id="transaction-date"
-              type="date"
-              value={formData.date}
-              onChange={(e) =>
-                setFormData({ ...formData, date: e.target.value })
-              }
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="num-shares"
-              className="block text-sm font-medium mb-1"
-            >
-              Number of Shares
-            </label>
-            <input
-              id="num-shares"
-              type="number"
-              step="0.000001"
-              value={formData.numShares}
-              onChange={(e) =>
-                setFormData({ ...formData, numShares: e.target.value })
-              }
-              placeholder="Enter number of shares"
-              inputMode="decimal"
-              enterKeyHint="next"
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
+          <Input
+            id="transaction-date"
+            label="Transaction Date"
+            type="date"
+            value={formData.date}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            required
+          />
+          <Input
+            id="num-shares"
+            label="Number of Shares"
+            type="number"
+            step="0.000001"
+            value={formData.numShares}
+            onChange={(e) =>
+              setFormData({ ...formData, numShares: e.target.value })
+            }
+            placeholder="Enter number of shares"
+            inputMode="decimal"
+            enterKeyHint="next"
+            required
+          />
           <CurrencyInput
             id="total-price"
             label="Total Price"
@@ -212,48 +201,54 @@ export function TransactionList({
             placeholder="0.00"
             enterKeyHint="next"
           />
-          <div>
-            <label
-              htmlFor="transaction-type"
-              className="block text-sm font-medium mb-1"
-            >
-              Transaction Type
-            </label>
-            <select
-              id="transaction-type"
-              value={formData.transactionType}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  transactionType: e.target.value as any,
-                })
-              }
-              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="buy">Buy</option>
-              <option value="sell">Sell</option>
-              <option value="return_of_capital">Return of Capital</option>
-              <option value="reinvested_dividend">Reinvested Dividend</option>
-              <option value="reinvested_capital_gains_distribution">
-                Reinvested Capital Gains Distribution
-              </option>
-            </select>
-          </div>
+          <Select
+            id="transaction-type"
+            label="Transaction Type"
+            value={formData.transactionType}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                transactionType: e.target.value as any,
+              })
+            }
+            options={[
+              { value: "buy", label: "Buy" },
+              { value: "sell", label: "Sell" },
+              { value: "return_of_capital", label: "Return of Capital" },
+              { value: "reinvested_dividend", label: "Reinvested Dividend" },
+              {
+                value: "reinvested_capital_gains_distribution",
+                label: "Reinvested Capital Gains Distribution",
+              },
+            ]}
+          />
           <div className="flex gap-2">
-            <button
+            <Button
               type="submit"
-              className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors cursor-pointer"
+              variant="success"
+              size="sm"
+              title={editingId ? "Update Transaction" : "Create Transaction"}
             >
-              {editingId ? "Update" : "Create"}
-            </button>
+              {editingId ? (
+                <Save className="w-4 h-4" />
+              ) : (
+                <Plus className="w-4 h-4" />
+              )}
+              <span className="hidden sm:inline">
+                {editingId ? "Update" : "Create"}
+              </span>
+            </Button>
             {editingId && (
-              <button
+              <Button
                 type="button"
                 onClick={handleCancel}
-                className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors cursor-pointer"
+                variant="secondary"
+                size="sm"
+                title="Cancel Edit"
               >
-                Cancel
-              </button>
+                <X className="w-4 h-4" />
+                <span className="hidden sm:inline">Cancel</span>
+              </Button>
             )}
           </div>
         </form>
@@ -264,13 +259,16 @@ export function TransactionList({
           const isSellTransaction = transaction.transactionType === "sell";
 
           return (
-            <div key={transaction._id} className="p-3 border rounded text-sm">
+            <div
+              key={transaction._id}
+              className="p-3 border border-gray-200 rounded text-sm bg-white"
+            >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <div className="text-gray-600 dark:text-gray-400">
+                  <div className="text-gray-600">
                     {new Date(transaction.date).toISOString().split("T")[0]}
                   </div>
-                  <div className="text-gray-600 dark:text-gray-400">
+                  <div className="text-gray-600">
                     {transaction.transactionType
                       .replace(/_/g, " ")
                       .toUpperCase()}
@@ -284,7 +282,7 @@ export function TransactionList({
                     )}{" "}
                     per share
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="text-sm text-gray-600">
                     Total: {formatCurrency(transaction.totalPriceCents)}
                     {transaction.commissionFeeCents &&
                       transaction.commissionFeeCents > 0 && (
@@ -299,15 +297,15 @@ export function TransactionList({
                   {/* Show capital gains/losses for sell transactions */}
                   {isSellTransaction && transaction.capitalGains && (
                     <>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div className="text-sm text-gray-600">
                         {transaction.capitalGains.capitalGainLossCents >= 0
                           ? "Capital Gain:"
                           : "Capital Loss:"}{" "}
                         <span
                           className={`font-mono ${
                             transaction.capitalGains.capitalGainLossCents >= 0
-                              ? "text-green-600"
-                              : "text-red-600"
+                              ? "text-success"
+                              : "text-danger"
                           }`}
                         >
                           {formatCurrency(
@@ -321,18 +319,22 @@ export function TransactionList({
                   )}
                 </div>
                 <div className="flex gap-1">
-                  <button
+                  <IconButton
                     onClick={() => handleEdit(transaction)}
-                    className="text-blue-500 hover:text-blue-700 text-xs focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded cursor-pointer"
+                    variant="primary"
+                    size="md"
+                    title="Edit Transaction"
                   >
-                    Edit
-                  </button>
-                  <button
+                    <Edit className="w-4 h-4" />
+                  </IconButton>
+                  <IconButton
                     onClick={() => handleDelete(transaction._id)}
-                    className="text-red-500 hover:text-red-700 text-xs focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded cursor-pointer"
+                    variant="danger"
+                    size="md"
+                    title="Delete Transaction"
                   >
-                    Delete
-                  </button>
+                    <Trash2 className="w-4 h-4" />
+                  </IconButton>
                 </div>
               </div>
             </div>

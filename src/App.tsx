@@ -10,15 +10,17 @@ import { SecurityDetail } from "./components/SecurityDetail";
 export default function App() {
   return (
     <BrowserRouter>
-      <header className="sticky top-0 z-10 bg-light dark:bg-dark p-4 border-b-2 border-slate-200 dark:border-slate-800">
+      <header className="sticky top-0 z-10 bg-white p-4 border-b border-gray-200">
         <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold">Canadian ACB Tracker</h1>
+          <h1 className="text-xl font-bold text-gray-900">
+            Canadian ACB Tracker
+          </h1>
           <Authenticated>
             <SignOutButton />
           </Authenticated>
         </div>
       </header>
-      <main className="p-8 flex flex-col gap-16">
+      <main className="p-8 flex flex-col gap-16 bg-white min-h-screen">
         <Authenticated>
           <Routes>
             <Route path="/" element={<PortfolioList />} />
