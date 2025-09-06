@@ -5,35 +5,25 @@ import { useParams, useNavigate } from "react-router-dom";
 import { TransactionList } from "./TransactionList";
 import { SecuritySummary } from "./SecuritySummary";
 
-export function SecurityDetail() {
+export const SecurityDetail = function SecurityDetail() {
   const { portfolioId, securityId } = useParams<{
     portfolioId: string;
     securityId: string;
   }>();
   const navigate = useNavigate();
-  const portfolio = useQuery(api.portfolios.getPortfolio, {
+
+  const data = useQuery(api.calculations.getSecurityDetailData, {
     portfolioId: portfolioId as Id<"portfolios">,
-  });
-  const security = useQuery(api.securities.getSecurity, {
-    securityId: securityId as Id<"securities">,
-  });
-  const summary = useQuery(api.calculations.getSecuritySummary, {
-    securityId: securityId as Id<"securities">,
-  });
-  const transactions = useQuery(api.transactions.listTransactionsBySecurity, {
     securityId: securityId as Id<"securities">,
   });
 
-  if (
-    portfolio === undefined ||
-    security === undefined ||
-    summary === undefined ||
-    transactions === undefined
-  ) {
-    return <div>Loading...</div>;
+  // Show loading state only if data is undefined
+  if (data === undefined) {
+    return null;
   }
 
-  if (!portfolio || !security) {
+  // Handle not found cases
+  if (!data.portfolio || !data.security) {
     return <div>Security not found</div>;
   }
 
@@ -44,27 +34,40 @@ export function SecurityDetail() {
           onClick={() => navigate(`/portfolio/${portfolioId}`)}
           className="text-blue-500 hover:text-blue-700 mb-2 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded cursor-pointer"
         >
-          ← Back to {portfolio.name}
+          ← Back to {data.portfolio.name}
         </button>
         <h2 className="text-2xl font-bold">
-          {security.name} ({security.ticker})
+          {data.security.name} ({data.security.ticker})
         </h2>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Security Summary */}
         <div>
-          <SecuritySummary summary={summary} currency={security.currency} />
+          {data.summary ? (
+            <SecuritySummary
+              summary={data.summary}
+              currency={data.security.currency}
+            />
+          ) : (
+            <div className="p-4 border rounded-lg">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Transactions */}
         <div>
           <TransactionList
             securityId={securityId as Id<"securities">}
-            transactions={transactions}
+            transactions={data.transactions}
           />
         </div>
       </div>
     </div>
   );
-}
+};

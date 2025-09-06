@@ -220,6 +220,144 @@ export const calculateACB = query({
 });
 
 /**
+ * Get all data needed for security detail page in one query.
+ */
+export const getSecurityDetailData = query({
+  args: {
+    portfolioId: v.id("portfolios"),
+    securityId: v.id("securities"),
+  },
+  returns: v.object({
+    portfolio: v.union(
+      v.object({
+        _id: v.id("portfolios"),
+        _creationTime: v.number(),
+        name: v.string(),
+        userId: v.id("users"),
+      }),
+      v.null(),
+    ),
+    security: v.union(
+      v.object({
+        _id: v.id("securities"),
+        _creationTime: v.number(),
+        portfolioId: v.id("portfolios"),
+        name: v.string(),
+        ticker: v.string(),
+        currency: v.string(),
+      }),
+      v.null(),
+    ),
+    summary: v.union(
+      v.object({
+        totalShares: v.number(),
+        totalACBCents: v.number(),
+        acbPerShareCents: v.number(),
+        currency: v.string(),
+      }),
+      v.null(),
+    ),
+    transactions: v.array(
+      v.object({
+        _id: v.id("transactions"),
+        _creationTime: v.number(),
+        securityId: v.id("securities"),
+        date: v.string(),
+        numShares: v.number(),
+        totalPriceCents: v.number(),
+        commissionFeeCents: v.optional(v.number()),
+        transactionType: v.union(
+          v.literal("buy"),
+          v.literal("sell"),
+          v.literal("return_of_capital"),
+          v.literal("reinvested_dividend"),
+          v.literal("reinvested_capital_gains_distribution"),
+        ),
+        sortOrder: v.number(),
+        capitalGains: v.optional(
+          v.object({
+            sellPricePerShareCents: v.number(),
+            acbPerShareCents: v.number(),
+            capitalGainLossCents: v.number(),
+          }),
+        ),
+      }),
+    ),
+  }),
+  handler: async (ctx, args) => {
+    // Get portfolio
+    const portfolio = await ctx.db.get(args.portfolioId);
+
+    // Get security
+    const security = await ctx.db.get(args.securityId);
+    if (!security) {
+      return {
+        portfolio,
+        security: null,
+        summary: null,
+        transactions: [],
+      };
+    }
+
+    // Get transactions
+    const transactions = await ctx.db
+      .query("transactions")
+      .withIndex("by_security_and_sort", (q) =>
+        q.eq("securityId", args.securityId),
+      )
+      .order("asc")
+      .collect();
+
+    // Calculate ACB and get capital gains
+    const acbResult: {
+      totalShares: number;
+      totalACBCents: number;
+      acbPerShareCents: number;
+      capitalGainsLosses: Array<{
+        transactionId: any;
+        date: string;
+        numShares: number;
+        sellPricePerShareCents: number;
+        acbPerShareCents: number;
+        capitalGainLossCents: number;
+        currency: string;
+      }>;
+    } = await ctx.runQuery(api.calculations.calculateACB, {
+      transactions,
+      currency: security.currency,
+    });
+
+    // Create a map of transaction ID to capital gains data
+    const capitalGainsMap = new Map();
+    for (const cg of acbResult.capitalGainsLosses) {
+      capitalGainsMap.set(cg.transactionId, {
+        sellPricePerShareCents: cg.sellPricePerShareCents,
+        acbPerShareCents: cg.acbPerShareCents,
+        capitalGainLossCents: cg.capitalGainLossCents,
+      });
+    }
+
+    // Add capital gains data to transactions
+    const transactionsWithCapitalGains = transactions.map((transaction) => ({
+      ...transaction,
+      capitalGains: capitalGainsMap.get(transaction._id) || undefined,
+    }));
+
+    return {
+      portfolio,
+      security,
+      summary: {
+        totalShares: acbResult.totalShares,
+        totalACBCents: acbResult.totalACBCents,
+        acbPerShareCents: acbResult.acbPerShareCents,
+        currency: security.currency,
+      },
+      transactions: transactionsWithCapitalGains,
+    };
+  },
+});
+
+/**
  * Get portfolio summary for all securities.
  */
 export const getPortfolioSummary = query({

@@ -95,7 +95,11 @@ export function PortfolioList() {
                 <h3 className="font-semibold text-lg">{portfolio.name}</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Created{" "}
-                  {new Date(portfolio._creationTime).toLocaleDateString()}
+                  {
+                    new Date(portfolio._creationTime)
+                      .toISOString()
+                      .split("T")[0]
+                  }
                 </p>
               </div>
               <button

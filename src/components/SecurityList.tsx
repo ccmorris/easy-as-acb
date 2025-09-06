@@ -4,10 +4,12 @@ import { Id } from "../../convex/_generated/dataModel";
 import { formatCurrency } from "../utils/currency";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { usePrefetchSecurityDetail } from "../hooks/usePrefetch";
 
 export function SecurityList() {
   const { portfolioId } = useParams<{ portfolioId: string }>();
   const navigate = useNavigate();
+  const { prefetchSecurityDetail } = usePrefetchSecurityDetail();
   const portfolio = useQuery(api.portfolios.getPortfolio, {
     portfolioId: portfolioId as Id<"portfolios">,
   });
@@ -166,6 +168,12 @@ export function SecurityList() {
               className="p-4 border rounded-lg cursor-pointer hover:border-blue-500 hover:shadow-md transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               onClick={() =>
                 navigate(`/portfolio/${portfolioId}/security/${security._id}`)
+              }
+              onMouseEnter={() =>
+                prefetchSecurityDetail(
+                  portfolioId as Id<"portfolios">,
+                  security._id,
+                )
               }
               tabIndex={0}
               onKeyDown={(e) => {
