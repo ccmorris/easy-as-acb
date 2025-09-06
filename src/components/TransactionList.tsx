@@ -40,7 +40,8 @@ export function TransactionList({
     const commissionFeeCents = formData.commissionFee
       ? Math.round(parseFloat(formData.commissionFee) * 100)
       : undefined;
-    const date = new Date(formData.date).getTime();
+    // Store date as ISO8601 string in UTC
+    const date = new Date(formData.date + "T00:00:00.000Z").toISOString();
 
     if (numShares && totalPriceCents >= 0) {
       await createTransaction({
@@ -85,7 +86,8 @@ export function TransactionList({
     const commissionFeeCents = formData.commissionFee
       ? Math.round(parseFloat(formData.commissionFee) * 100)
       : undefined;
-    const date = new Date(formData.date).getTime();
+    // Store date as ISO8601 string in UTC
+    const date = new Date(formData.date + "T00:00:00.000Z").toISOString();
 
     if (numShares && totalPriceCents >= 0) {
       await updateTransaction({
@@ -132,7 +134,7 @@ export function TransactionList({
         <h3 className="text-lg font-semibold">Transactions</h3>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          className="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors cursor-pointer"
         >
           {showForm ? "Cancel" : "New Transaction"}
         </button>
@@ -141,72 +143,122 @@ export function TransactionList({
       {showForm && (
         <form
           onSubmit={editingId ? handleUpdate : handleCreate}
-          className="mb-4 space-y-2"
+          className="mb-4 space-y-3"
         >
-          <input
-            type="date"
-            value={formData.date}
-            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <input
-            type="number"
-            step="0.000001"
-            value={formData.numShares}
-            onChange={(e) =>
-              setFormData({ ...formData, numShares: e.target.value })
-            }
-            placeholder="Number of shares"
-            inputMode="decimal"
-            enterKeyHint="next"
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <input
-            type="number"
-            step="0.01"
-            value={formData.totalPrice}
-            onChange={(e) =>
-              setFormData({ ...formData, totalPrice: e.target.value })
-            }
-            placeholder="Total price"
-            inputMode="decimal"
-            enterKeyHint="next"
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <input
-            type="number"
-            step="0.01"
-            value={formData.commissionFee}
-            onChange={(e) =>
-              setFormData({ ...formData, commissionFee: e.target.value })
-            }
-            placeholder="Commission fee (optional)"
-            inputMode="decimal"
-            enterKeyHint="next"
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <select
-            value={formData.transactionType}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                transactionType: e.target.value as any,
-              })
-            }
-            className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="buy">Buy</option>
-            <option value="sell">Sell</option>
-            <option value="return_of_capital">Return of Capital</option>
-            <option value="reinvested_dividend">Reinvested Dividend</option>
-            <option value="reinvested_capital_gains_distribution">
-              Reinvested Capital Gains Distribution
-            </option>
-          </select>
+          <div>
+            <label
+              htmlFor="transaction-date"
+              className="block text-sm font-medium mb-1"
+            >
+              Transaction Date
+            </label>
+            <input
+              id="transaction-date"
+              type="date"
+              value={formData.date}
+              onChange={(e) =>
+                setFormData({ ...formData, date: e.target.value })
+              }
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="num-shares"
+              className="block text-sm font-medium mb-1"
+            >
+              Number of Shares
+            </label>
+            <input
+              id="num-shares"
+              type="number"
+              step="0.000001"
+              value={formData.numShares}
+              onChange={(e) =>
+                setFormData({ ...formData, numShares: e.target.value })
+              }
+              placeholder="Enter number of shares"
+              inputMode="decimal"
+              enterKeyHint="next"
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="total-price"
+              className="block text-sm font-medium mb-1"
+            >
+              Total Price
+            </label>
+            <input
+              id="total-price"
+              type="number"
+              step="0.01"
+              value={formData.totalPrice}
+              onChange={(e) =>
+                setFormData({ ...formData, totalPrice: e.target.value })
+              }
+              placeholder="Enter total price"
+              inputMode="decimal"
+              enterKeyHint="next"
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="commission-fee"
+              className="block text-sm font-medium mb-1"
+            >
+              Commission Fee (Optional)
+            </label>
+            <input
+              id="commission-fee"
+              type="number"
+              step="0.01"
+              value={formData.commissionFee}
+              onChange={(e) =>
+                setFormData({ ...formData, commissionFee: e.target.value })
+              }
+              placeholder="Enter commission fee"
+              inputMode="decimal"
+              enterKeyHint="next"
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="transaction-type"
+              className="block text-sm font-medium mb-1"
+            >
+              Transaction Type
+            </label>
+            <select
+              id="transaction-type"
+              value={formData.transactionType}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  transactionType: e.target.value as any,
+                })
+              }
+              className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="buy">Buy</option>
+              <option value="sell">Sell</option>
+              <option value="return_of_capital">Return of Capital</option>
+              <option value="reinvested_dividend">Reinvested Dividend</option>
+              <option value="reinvested_capital_gains_distribution">
+                Reinvested Capital Gains Distribution
+              </option>
+            </select>
+          </div>
           <div className="flex gap-2">
             <button
               type="submit"
-              className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+              className="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors cursor-pointer"
             >
               {editingId ? "Update" : "Create"}
             </button>
@@ -214,7 +266,7 @@ export function TransactionList({
               <button
                 type="button"
                 onClick={handleCancel}
-                className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                className="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
@@ -229,7 +281,7 @@ export function TransactionList({
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="text-gray-600 dark:text-gray-400">
-                  {new Date(transaction.date).toLocaleDateString()}
+                  {new Date(transaction.date).toISOString().split("T")[0]}
                 </div>
                 <div className="text-gray-600 dark:text-gray-400">
                   {transaction.transactionType.replace(/_/g, " ").toUpperCase()}
@@ -257,13 +309,13 @@ export function TransactionList({
               <div className="flex gap-1">
                 <button
                   onClick={() => handleEdit(transaction)}
-                  className="text-blue-500 hover:text-blue-700 text-xs focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+                  className="text-blue-500 hover:text-blue-700 text-xs focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded cursor-pointer"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => handleDelete(transaction._id)}
-                  className="text-red-500 hover:text-red-700 text-xs focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
+                  className="text-red-500 hover:text-red-700 text-xs focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded cursor-pointer"
                 >
                   Delete
                 </button>

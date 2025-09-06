@@ -23,7 +23,7 @@ export default defineSchema({
 
   transactions: defineTable({
     securityId: v.id("securities"),
-    date: v.number(), // timestamp
+    date: v.string(), // ISO8601 date string in UTC
     numShares: v.number(), // can be negative for sells
     totalPriceCents: v.number(), // amount in cents
     commissionFeeCents: v.optional(v.number()), // amount in cents

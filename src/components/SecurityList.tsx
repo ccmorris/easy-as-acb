@@ -63,7 +63,7 @@ export function SecurityList() {
       <div className="mb-6">
         <button
           onClick={() => navigate("/")}
-          className="text-blue-500 hover:text-blue-700 mb-2 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+          className="text-blue-500 hover:text-blue-700 mb-2 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded cursor-pointer"
         >
           ← Back to Portfolios
         </button>
@@ -74,7 +74,7 @@ export function SecurityList() {
         <h3 className="text-xl font-semibold">Securities</h3>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors cursor-pointer"
         >
           {showForm ? "Cancel" : "New Security"}
         </button>
@@ -85,39 +85,70 @@ export function SecurityList() {
           onSubmit={handleCreate}
           className="mb-6 p-4 bg-slate-100 dark:bg-slate-800 rounded-lg space-y-3"
         >
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="Security name"
-            enterKeyHint="next"
-            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            autoFocus
-          />
-          <input
-            type="text"
-            value={formData.ticker}
-            onChange={(e) =>
-              setFormData({ ...formData, ticker: e.target.value })
-            }
-            placeholder="Ticker symbol"
-            enterKeyHint="next"
-            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-          <select
-            value={formData.currency}
-            onChange={(e) =>
-              setFormData({ ...formData, currency: e.target.value })
-            }
-            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="CAD">CAD</option>
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-          </select>
+          <div>
+            <label
+              htmlFor="security-name"
+              className="block text-sm font-medium mb-1"
+            >
+              Security Name
+            </label>
+            <input
+              id="security-name"
+              type="text"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
+              placeholder="Enter security name"
+              enterKeyHint="next"
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              autoFocus
+              required
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="ticker-symbol"
+              className="block text-sm font-medium mb-1"
+            >
+              Ticker Symbol
+            </label>
+            <input
+              id="ticker-symbol"
+              type="text"
+              value={formData.ticker}
+              onChange={(e) =>
+                setFormData({ ...formData, ticker: e.target.value })
+              }
+              placeholder="Enter ticker symbol"
+              enterKeyHint="next"
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="currency"
+              className="block text-sm font-medium mb-1"
+            >
+              Currency
+            </label>
+            <select
+              id="currency"
+              value={formData.currency}
+              onChange={(e) =>
+                setFormData({ ...formData, currency: e.target.value })
+              }
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="CAD">CAD</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </div>
           <button
             type="submit"
-            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors cursor-pointer"
           >
             Create Security
           </button>
@@ -158,7 +189,7 @@ export function SecurityList() {
                     e.stopPropagation();
                     handleDelete(security._id);
                   }}
-                  className="text-red-500 hover:text-red-700 text-sm focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
+                  className="text-red-500 hover:text-red-700 text-sm focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded cursor-pointer"
                 >
                   Delete
                 </button>

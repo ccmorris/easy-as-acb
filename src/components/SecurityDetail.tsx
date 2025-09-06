@@ -48,7 +48,7 @@ export function SecurityDetail() {
       <div className="mb-6">
         <button
           onClick={() => navigate(`/portfolio/${portfolioId}`)}
-          className="text-blue-500 hover:text-blue-700 mb-2 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded"
+          className="text-blue-500 hover:text-blue-700 mb-2 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded cursor-pointer"
         >
           ← Back to {portfolio.name}
         </button>

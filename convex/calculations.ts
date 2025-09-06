@@ -94,7 +94,7 @@ export const getCapitalGainsLosses = query({
   returns: v.array(
     v.object({
       transactionId: v.id("transactions"),
-      date: v.number(),
+      date: v.string(), // ISO8601 date string in UTC
       numShares: v.number(),
       sellPricePerShareCents: v.number(),
       acbPerShareCents: v.number(),

@@ -37,7 +37,7 @@ export function PortfolioList() {
         <h2 className="text-2xl font-bold">Portfolios</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors cursor-pointer"
         >
           {showForm ? "Cancel" : "New Portfolio"}
         </button>
@@ -48,18 +48,28 @@ export function PortfolioList() {
           onSubmit={handleCreate}
           className="mb-6 p-4 bg-slate-100 dark:bg-slate-800 rounded-lg"
         >
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => setFormData({ name: e.target.value })}
-            placeholder="Portfolio name"
-            enterKeyHint="done"
-            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            autoFocus
-          />
+          <div>
+            <label
+              htmlFor="portfolio-name"
+              className="block text-sm font-medium mb-1"
+            >
+              Portfolio Name
+            </label>
+            <input
+              id="portfolio-name"
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ name: e.target.value })}
+              placeholder="Enter portfolio name"
+              enterKeyHint="done"
+              className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              autoFocus
+              required
+            />
+          </div>
           <button
             type="submit"
-            className="mt-3 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+            className="mt-3 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors cursor-pointer"
           >
             Create Portfolio
           </button>
@@ -93,7 +103,7 @@ export function PortfolioList() {
                   e.stopPropagation();
                   handleDelete(portfolio._id);
                 }}
-                className="text-red-500 hover:text-red-700 text-sm focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
+                className="text-red-500 hover:text-red-700 text-sm focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded cursor-pointer"
               >
                 Delete
               </button>

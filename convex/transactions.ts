@@ -7,7 +7,7 @@ import { v } from "convex/values";
 export const createTransaction = mutation({
   args: {
     securityId: v.id("securities"),
-    date: v.number(), // timestamp
+    date: v.string(), // ISO8601 date string in UTC
     numShares: v.number(),
     totalPriceCents: v.number(),
     commissionFeeCents: v.optional(v.number()),
@@ -75,7 +75,7 @@ export const listTransactionsBySecurity = query({
       _id: v.id("transactions"),
       _creationTime: v.number(),
       securityId: v.id("securities"),
-      date: v.number(),
+      date: v.string(),
       numShares: v.number(),
       totalPriceCents: v.number(),
       commissionFeeCents: v.optional(v.number()),
@@ -112,7 +112,7 @@ export const getTransaction = query({
       _id: v.id("transactions"),
       _creationTime: v.number(),
       securityId: v.id("securities"),
-      date: v.number(),
+      date: v.string(),
       numShares: v.number(),
       totalPriceCents: v.number(),
       commissionFeeCents: v.optional(v.number()),
@@ -138,7 +138,7 @@ export const getTransaction = query({
 export const updateTransaction = mutation({
   args: {
     transactionId: v.id("transactions"),
-    date: v.number(),
+    date: v.string(), // ISO8601 date string in UTC
     numShares: v.number(),
     totalPriceCents: v.number(),
     commissionFeeCents: v.optional(v.number()),

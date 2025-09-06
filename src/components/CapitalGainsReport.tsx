@@ -37,7 +37,7 @@ export function CapitalGainsReport({ capitalGains }: CapitalGainsReportProps) {
               {capitalGains.map((cg: any) => (
                 <div key={cg.transactionId} className="text-xs">
                   <div className="flex justify-between">
-                    <span>{new Date(cg.date).toLocaleDateString()}</span>
+                    <span>{new Date(cg.date).toISOString().split("T")[0]}</span>
                     <span
                       className={
                         cg.capitalGainLossCents >= 0
