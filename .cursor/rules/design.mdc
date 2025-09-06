@@ -1,0 +1,11 @@
+---
+description: Design
+globs:
+alwaysApply: true
+---
+
+Always make web designs responsive to screen size and input types. The application should feel natural on a desktop browser with mouse and keyboard, but also natural on a phone screen with touch inputs.
+
+All user interfaces should be usable with just a keyboard, but also make sure they are natural when using a mouse or touchscreen as well.
+
+Use the appropriate hints for inputs so that browsers know how to provide useful input interfaces, eg. use the `inputmode` and `enterkeyhint` attributes (and others) where applicable.

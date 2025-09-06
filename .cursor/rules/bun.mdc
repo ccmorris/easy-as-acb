@@ -8,3 +8,5 @@ Use Bun as the package manager and script runner.
 
 eg. `bun i react`
 eg. `bun run tsc`
+
+Do not use npm for anything!
