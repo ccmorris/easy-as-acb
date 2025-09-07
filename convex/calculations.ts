@@ -1,6 +1,7 @@
 import { query } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 /**
  * Helper function to calculate ACB from an array of transactions.
@@ -119,8 +120,19 @@ export const getSecuritySummary = query({
     currency: v.string(),
   }),
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Must be authenticated to view security summary");
+    }
+
     const security = await ctx.db.get(args.securityId);
     if (!security) {
+      throw new Error("Security not found");
+    }
+
+    // Verify user owns the portfolio that contains this security
+    const portfolio = await ctx.db.get(security.portfolioId);
+    if (!portfolio || portfolio.userId !== userId) {
       throw new Error("Security not found");
     }
 
@@ -162,8 +174,19 @@ export const getCapitalGainsLosses = query({
     }),
   ),
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Must be authenticated to view capital gains data");
+    }
+
     const security = await ctx.db.get(args.securityId);
     if (!security) {
+      throw new Error("Security not found");
+    }
+
+    // Verify user owns the portfolio that contains this security
+    const portfolio = await ctx.db.get(security.portfolioId);
+    if (!portfolio || portfolio.userId !== userId) {
       throw new Error("Security not found");
     }
 
@@ -296,12 +319,30 @@ export const getSecurityDetailData = query({
     ),
   }),
   handler: async (ctx, args) => {
-    // Get portfolio
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return {
+        portfolio: null,
+        security: null,
+        summary: null,
+        transactions: [],
+      };
+    }
+
+    // Get portfolio and verify ownership
     const portfolio = await ctx.db.get(args.portfolioId);
+    if (!portfolio || portfolio.userId !== userId) {
+      return {
+        portfolio: null,
+        security: null,
+        summary: null,
+        transactions: [],
+      };
+    }
 
     // Get security
     const security = await ctx.db.get(args.securityId);
-    if (!security) {
+    if (!security || security.portfolioId !== args.portfolioId) {
       return {
         portfolio,
         security: null,
@@ -387,6 +428,17 @@ export const getPortfolioSummary = query({
     }),
   ),
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
+    }
+
+    // Verify portfolio exists and user owns it
+    const portfolio = await ctx.db.get(args.portfolioId);
+    if (!portfolio || portfolio.userId !== userId) {
+      return [];
+    }
+
     const securities = await ctx.db
       .query("securities")
       .withIndex("by_portfolio", (q) => q.eq("portfolioId", args.portfolioId))

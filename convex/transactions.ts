@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 /**
  * Create a new transaction for a security.
@@ -23,6 +24,11 @@ export const createTransaction = mutation({
   },
   returns: v.id("transactions"),
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Must be authenticated to create a transaction");
+    }
+
     // Validate inputs
     if (args.numShares !== undefined && args.numShares === 0) {
       throw new Error("Number of shares cannot be zero");
@@ -55,9 +61,14 @@ export const createTransaction = mutation({
       throw new Error("Return of capital per share cannot be negative");
     }
 
-    // Verify security exists
+    // Verify security exists and user owns the portfolio
     const security = await ctx.db.get(args.securityId);
     if (!security) {
+      throw new Error("Security not found");
+    }
+
+    const portfolio = await ctx.db.get(security.portfolioId);
+    if (!portfolio || portfolio.userId !== userId) {
       throw new Error("Security not found");
     }
 
@@ -129,9 +140,20 @@ export const listTransactionsBySecurity = query({
     }),
   ),
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return [];
+    }
+
     const security = await ctx.db.get(args.securityId);
     if (!security) {
-      throw new Error("Security not found");
+      return [];
+    }
+
+    // Verify user owns the portfolio that contains this security
+    const portfolio = await ctx.db.get(security.portfolioId);
+    if (!portfolio || portfolio.userId !== userId) {
+      return [];
     }
 
     const transactions = await ctx.db
@@ -195,7 +217,28 @@ export const getTransaction = query({
     v.null(),
   ),
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.transactionId);
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      return null;
+    }
+
+    const transaction = await ctx.db.get(args.transactionId);
+    if (!transaction) {
+      return null;
+    }
+
+    // Verify user owns the portfolio that contains this transaction
+    const security = await ctx.db.get(transaction.securityId);
+    if (!security) {
+      return null;
+    }
+
+    const portfolio = await ctx.db.get(security.portfolioId);
+    if (!portfolio || portfolio.userId !== userId) {
+      return null;
+    }
+
+    return transaction;
   },
 });
 
@@ -220,6 +263,11 @@ export const updateTransaction = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Must be authenticated to update a transaction");
+    }
+
     // Validate inputs
     if (args.numShares !== undefined && args.numShares === 0) {
       throw new Error("Number of shares cannot be zero");
@@ -257,6 +305,17 @@ export const updateTransaction = mutation({
       throw new Error("Transaction not found");
     }
 
+    // Verify user owns the portfolio that contains this transaction
+    const security = await ctx.db.get(transaction.securityId);
+    if (!security) {
+      throw new Error("Transaction not found");
+    }
+
+    const portfolio = await ctx.db.get(security.portfolioId);
+    if (!portfolio || portfolio.userId !== userId) {
+      throw new Error("Transaction not found");
+    }
+
     await ctx.db.patch(args.transactionId, {
       date: args.date,
       numShares:
@@ -285,8 +344,24 @@ export const deleteTransaction = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Must be authenticated to delete a transaction");
+    }
+
     const transaction = await ctx.db.get(args.transactionId);
     if (!transaction) {
+      throw new Error("Transaction not found");
+    }
+
+    // Verify user owns the portfolio that contains this transaction
+    const security = await ctx.db.get(transaction.securityId);
+    if (!security) {
+      throw new Error("Transaction not found");
+    }
+
+    const portfolio = await ctx.db.get(security.portfolioId);
+    if (!portfolio || portfolio.userId !== userId) {
       throw new Error("Transaction not found");
     }
 
@@ -304,10 +379,26 @@ export const reorderTransactions = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Must be authenticated to reorder transactions");
+    }
+
     for (let i = 0; i < args.transactionIds.length; i++) {
       const transactionId = args.transactionIds[i];
       const transaction = await ctx.db.get(transactionId);
       if (!transaction) {
+        throw new Error(`Transaction ${transactionId} not found`);
+      }
+
+      // Verify user owns the portfolio that contains this transaction
+      const security = await ctx.db.get(transaction.securityId);
+      if (!security) {
+        throw new Error(`Transaction ${transactionId} not found`);
+      }
+
+      const portfolio = await ctx.db.get(security.portfolioId);
+      if (!portfolio || portfolio.userId !== userId) {
         throw new Error(`Transaction ${transactionId} not found`);
       }
 
