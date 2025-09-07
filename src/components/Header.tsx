@@ -2,9 +2,12 @@ import { SignOutButton } from "./Auth";
 import { Breadcrumb } from "./ui";
 import { useBreadcrumbs } from "../hooks/useBreadcrumbs";
 import { Authenticated } from "convex/react";
+import { useLocation } from "react-router-dom";
 
 export function Header() {
   const breadcrumbs = useBreadcrumbs();
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
 
   return (
     <header className="sticky top-0 z-10 gradient-subtle-bg border-b border-gray-200 shadow-subtle">
@@ -20,7 +23,10 @@ export function Header() {
               <span className="hidden md:inline">Easy as ACB</span>
             </h1>
             <div className="min-w-0 flex-1">
-              <Breadcrumb items={breadcrumbs} />
+              <Breadcrumb
+                items={breadcrumbs}
+                className={isHomePage ? "hidden sm:flex" : ""}
+              />
             </div>
           </div>
           <Authenticated>
