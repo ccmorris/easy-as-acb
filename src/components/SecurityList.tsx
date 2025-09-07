@@ -76,19 +76,8 @@ export function SecurityList() {
         <h2 className="text-2xl font-bold text-text">{portfolio.name}</h2>
       </div>
 
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6">
         <h3 className="text-xl font-semibold text-text">Securities</h3>
-        <Button
-          onClick={() => setShowForm(!showForm)}
-          variant="primary"
-          size="sm"
-          title={showForm ? "Cancel" : "Create New Security"}
-        >
-          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          <span className="hidden sm:inline">
-            {showForm ? "Cancel" : "New Security"}
-          </span>
-        </Button>
       </div>
 
       {showForm && (
@@ -132,97 +121,133 @@ export function SecurityList() {
                 { value: "EUR", label: "EUR" },
               ]}
             />
-            <Button
-              type="submit"
-              variant="success"
-              size="sm"
-              title="Create Security"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Create Security</span>
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="submit"
+                variant="success"
+                size="sm"
+                title="Create Security"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Create Security</span>
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setShowForm(false)}
+                variant="secondary"
+                size="sm"
+                title="Cancel"
+              >
+                <X className="w-4 h-4" />
+                <span className="hidden sm:inline">Cancel</span>
+              </Button>
+            </div>
           </form>
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {securities.map((security) => {
-          const summary = portfolioSummary.find(
-            (s) => s.securityId === security._id,
-          );
-          return (
-            <Card
-              key={security._id}
-              interactive
-              onClick={() =>
-                navigate(`/portfolio/${portfolioId}/security/${security._id}`)
-              }
-              onMouseEnter={() =>
-                prefetchSecurityDetail(
-                  portfolioId as Id<"portfolios">,
-                  security._id,
-                )
-              }
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  navigate(
-                    `/portfolio/${portfolioId}/security/${security._id}`,
-                  );
+      {!showForm && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {securities.map((security) => {
+            const summary = portfolioSummary.find(
+              (s) => s.securityId === security._id,
+            );
+            return (
+              <Card
+                key={security._id}
+                interactive
+                onClick={() =>
+                  navigate(`/portfolio/${portfolioId}/security/${security._id}`)
                 }
-              }}
-            >
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h4 className="font-semibold text-lg text-text">
-                    {security.name}
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    {security.ticker} ({security.currency})
-                  </p>
+                onMouseEnter={() =>
+                  prefetchSecurityDetail(
+                    portfolioId as Id<"portfolios">,
+                    security._id,
+                  )
+                }
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    navigate(
+                      `/portfolio/${portfolioId}/security/${security._id}`,
+                    );
+                  }
+                }}
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h4 className="font-semibold text-lg text-text">
+                      {security.name}
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      {security.ticker} ({security.currency})
+                    </p>
+                  </div>
+                  <IconButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(security._id);
+                    }}
+                    variant="danger"
+                    size="md"
+                    title="Delete Security"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </IconButton>
                 </div>
-                <IconButton
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(security._id);
-                  }}
-                  variant="danger"
-                  size="md"
-                  title="Delete Security"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </IconButton>
-              </div>
-              {summary && (
-                <div className="text-sm space-y-1">
-                  <div className="flex justify-between">
-                    <span>Shares:</span>
-                    <span className="font-mono">
-                      {summary.totalShares.toFixed(6)}
-                    </span>
+                {summary && (
+                  <div className="text-sm space-y-1">
+                    <div className="flex justify-between">
+                      <span>Shares:</span>
+                      <span className="font-mono">
+                        {summary.totalShares.toFixed(6)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>ACB:</span>
+                      <span className="font-mono">
+                        {formatCurrency(
+                          summary.totalACBCents,
+                          summary.currency,
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Per Share:</span>
+                      <span className="font-mono">
+                        {formatCurrency(
+                          summary.acbPerShareCents,
+                          summary.currency,
+                        )}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span>ACB:</span>
-                    <span className="font-mono">
-                      {formatCurrency(summary.totalACBCents, summary.currency)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Per Share:</span>
-                    <span className="font-mono">
-                      {formatCurrency(
-                        summary.acbPerShareCents,
-                        summary.currency,
-                      )}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </Card>
-          );
-        })}
-      </div>
+                )}
+              </Card>
+            );
+          })}
+
+          {/* Create New Security Card */}
+          <Card
+            interactive
+            onClick={() => setShowForm(!showForm)}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setShowForm(!showForm);
+              }
+            }}
+            className="border-2 border-dashed border-gray-300 hover:border-primary-500 transition-colors"
+          >
+            <div className="flex flex-col items-center justify-center h-full min-h-[120px] text-gray-500 hover:text-primary-600 transition-colors">
+              <Plus className="w-12 h-12 mb-2" />
+              <span className="text-sm font-medium">Create New Security</span>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

@@ -35,19 +35,8 @@ export function PortfolioList() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6">
         <h2 className="text-2xl font-bold text-text">Portfolios</h2>
-        <Button
-          onClick={() => setShowForm(!showForm)}
-          variant="primary"
-          size="sm"
-          title={showForm ? "Cancel" : "Create New Portfolio"}
-        >
-          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          <span className="hidden sm:inline">
-            {showForm ? "Cancel" : "New Portfolio"}
-          </span>
-        </Button>
       </div>
 
       {showForm && (
@@ -64,62 +53,95 @@ export function PortfolioList() {
               autoFocus
               required
             />
-            <Button
-              type="submit"
-              variant="success"
-              size="sm"
-              title="Create Portfolio"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Create Portfolio</span>
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="submit"
+                variant="success"
+                size="sm"
+                title="Create Portfolio"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Create Portfolio</span>
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setShowForm(false)}
+                variant="secondary"
+                size="sm"
+                title="Cancel"
+              >
+                <X className="w-4 h-4" />
+                <span className="hidden sm:inline">Cancel</span>
+              </Button>
+            </div>
           </form>
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {portfolios.map((portfolio) => (
+      {!showForm && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {portfolios.map((portfolio) => (
+            <Card
+              key={portfolio._id}
+              interactive
+              onClick={() => navigate(`/portfolio/${portfolio._id}`)}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  navigate(`/portfolio/${portfolio._id}`);
+                }
+              }}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-semibold text-lg text-text">
+                    {portfolio.name}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Created{" "}
+                    {
+                      new Date(portfolio._creationTime)
+                        .toISOString()
+                        .split("T")[0]
+                    }
+                  </p>
+                </div>
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(portfolio._id);
+                  }}
+                  variant="danger"
+                  size="md"
+                  title="Delete Portfolio"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </IconButton>
+              </div>
+            </Card>
+          ))}
+
+          {/* Create New Portfolio Card */}
           <Card
-            key={portfolio._id}
             interactive
-            onClick={() => navigate(`/portfolio/${portfolio._id}`)}
+            onClick={() => setShowForm(!showForm)}
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                navigate(`/portfolio/${portfolio._id}`);
+                setShowForm(!showForm);
               }
             }}
+            className="border-2 border-dashed border-gray-300 hover:border-primary-500 transition-colors"
           >
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-semibold text-lg text-text">
-                  {portfolio.name}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Created{" "}
-                  {
-                    new Date(portfolio._creationTime)
-                      .toISOString()
-                      .split("T")[0]
-                  }
-                </p>
-              </div>
-              <IconButton
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(portfolio._id);
-                }}
-                variant="danger"
-                size="md"
-                title="Delete Portfolio"
-              >
-                <Trash2 className="w-5 h-5" />
-              </IconButton>
+            <div className="flex flex-col items-center justify-center h-full min-h-[80px] text-gray-500 hover:text-primary-600 transition-colors">
+              <Plus className="w-12 h-12 mb-2" />
+              <span className="text-sm font-medium">Create New Portfolio</span>
             </div>
           </Card>
-        ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

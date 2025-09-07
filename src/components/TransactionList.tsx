@@ -138,19 +138,8 @@ export function TransactionList({
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
+      <div className="mb-4">
         <h3 className="text-lg font-semibold text-text">Transactions</h3>
-        <Button
-          onClick={() => setShowForm(!showForm)}
-          variant="primary"
-          size="sm"
-          title={showForm ? "Cancel" : "Add New Transaction"}
-        >
-          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-          <span className="hidden sm:inline">
-            {showForm ? "Cancel" : "New Transaction"}
-          </span>
-        </Button>
       </div>
 
       {showForm && (
@@ -158,6 +147,27 @@ export function TransactionList({
           onSubmit={editingId ? handleUpdate : handleCreate}
           className="mb-4 space-y-3"
         >
+          <Select
+            id="transaction-type"
+            label="Transaction Type"
+            value={formData.transactionType}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                transactionType: e.target.value as any,
+              })
+            }
+            options={[
+              { value: "buy", label: "Buy" },
+              { value: "sell", label: "Sell" },
+              { value: "return_of_capital", label: "Return of Capital" },
+              { value: "reinvested_dividend", label: "Reinvested Dividend" },
+              {
+                value: "reinvested_capital_gains_distribution",
+                label: "Reinvested Capital Gains Distribution",
+              },
+            ]}
+          />
           <Input
             id="transaction-date"
             label="Transaction Date"
@@ -201,27 +211,6 @@ export function TransactionList({
             placeholder="0.00"
             enterKeyHint="next"
           />
-          <Select
-            id="transaction-type"
-            label="Transaction Type"
-            value={formData.transactionType}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                transactionType: e.target.value as any,
-              })
-            }
-            options={[
-              { value: "buy", label: "Buy" },
-              { value: "sell", label: "Sell" },
-              { value: "return_of_capital", label: "Return of Capital" },
-              { value: "reinvested_dividend", label: "Reinvested Dividend" },
-              {
-                value: "reinvested_capital_gains_distribution",
-                label: "Reinvested Capital Gains Distribution",
-              },
-            ]}
-          />
           <div className="flex gap-2">
             <Button
               type="submit"
@@ -238,109 +227,127 @@ export function TransactionList({
                 {editingId ? "Update" : "Create"}
               </span>
             </Button>
-            {editingId && (
-              <Button
-                type="button"
-                onClick={handleCancel}
-                variant="secondary"
-                size="sm"
-                title="Cancel Edit"
-              >
-                <X className="w-4 h-4" />
-                <span className="hidden sm:inline">Cancel</span>
-              </Button>
-            )}
+            <Button
+              type="button"
+              onClick={handleCancel}
+              variant="secondary"
+              size="sm"
+              title="Cancel"
+            >
+              <X className="w-4 h-4" />
+              <span className="hidden sm:inline">Cancel</span>
+            </Button>
           </div>
         </form>
       )}
 
-      <div className="space-y-2">
-        {transactions.map((transaction) => {
-          const isSellTransaction = transaction.transactionType === "sell";
+      {!showForm && (
+        <div className="space-y-2">
+          {/* Create New Transaction Card */}
+          <div
+            className="p-3 border-2 border-dashed border-gray-300 rounded text-sm bg-white hover:border-primary-500 hover:shadow-md transition-colors cursor-pointer"
+            onClick={() => setShowForm(!showForm)}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setShowForm(!showForm);
+              }
+            }}
+          >
+            <div className="flex items-center justify-center h-16 text-gray-500 hover:text-primary-600 transition-colors">
+              <Plus className="w-8 h-8 mr-2" />
+              <span className="font-medium">Add New Transaction</span>
+            </div>
+          </div>
 
-          return (
-            <div
-              key={transaction._id}
-              className="p-3 border border-gray-200 rounded text-sm bg-white"
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="text-gray-600">
-                    {new Date(transaction.date).toISOString().split("T")[0]}
-                  </div>
-                  <div className="text-gray-600">
-                    {transaction.transactionType
-                      .replace(/_/g, " ")
-                      .toUpperCase()}
-                  </div>
-                  <div>
-                    {Math.abs(transaction.numShares)} shares @{" "}
-                    {formatCurrency(
-                      (transaction.totalPriceCents -
-                        (transaction.commissionFeeCents || 0)) /
-                        Math.abs(transaction.numShares),
-                    )}{" "}
-                    per share
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    Total: {formatCurrency(transaction.totalPriceCents)}
-                    {transaction.commissionFeeCents &&
-                      transaction.commissionFeeCents > 0 && (
-                        <span>
-                          {" "}
-                          (Fee: {formatCurrency(transaction.commissionFeeCents)}
-                          )
-                        </span>
-                      )}
-                  </div>
+          {transactions.map((transaction) => {
+            const isSellTransaction = transaction.transactionType === "sell";
 
-                  {/* Show capital gains/losses for sell transactions */}
-                  {isSellTransaction && transaction.capitalGains && (
-                    <>
-                      <div className="text-sm text-gray-600">
-                        {transaction.capitalGains.capitalGainLossCents >= 0
-                          ? "Capital Gain:"
-                          : "Capital Loss:"}{" "}
-                        <span
-                          className={`font-mono ${
-                            transaction.capitalGains.capitalGainLossCents >= 0
-                              ? "text-success"
-                              : "text-danger"
-                          }`}
-                        >
-                          {formatCurrency(
-                            Math.abs(
-                              transaction.capitalGains.capitalGainLossCents,
-                            ),
-                          )}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-                <div className="flex gap-1">
-                  <IconButton
-                    onClick={() => handleEdit(transaction)}
-                    variant="primary"
-                    size="md"
-                    title="Edit Transaction"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => handleDelete(transaction._id)}
-                    variant="danger"
-                    size="md"
-                    title="Delete Transaction"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </IconButton>
+            return (
+              <div
+                key={transaction._id}
+                className="p-3 border border-gray-200 rounded text-sm bg-white"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="text-gray-600">
+                      {new Date(transaction.date).toISOString().split("T")[0]}
+                    </div>
+                    <div className="text-gray-600">
+                      {transaction.transactionType
+                        .replace(/_/g, " ")
+                        .toUpperCase()}
+                    </div>
+                    <div>
+                      {Math.abs(transaction.numShares)} shares @{" "}
+                      {formatCurrency(
+                        (transaction.totalPriceCents -
+                          (transaction.commissionFeeCents || 0)) /
+                          Math.abs(transaction.numShares),
+                      )}{" "}
+                      per share
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Total: {formatCurrency(transaction.totalPriceCents)}
+                      {transaction.commissionFeeCents &&
+                        transaction.commissionFeeCents > 0 && (
+                          <span>
+                            {" "}
+                            (Fee:{" "}
+                            {formatCurrency(transaction.commissionFeeCents)})
+                          </span>
+                        )}
+                    </div>
+
+                    {/* Show capital gains/losses for sell transactions */}
+                    {isSellTransaction && transaction.capitalGains && (
+                      <>
+                        <div className="text-sm text-gray-600">
+                          {transaction.capitalGains.capitalGainLossCents >= 0
+                            ? "Capital Gain:"
+                            : "Capital Loss:"}{" "}
+                          <span
+                            className={`font-mono ${
+                              transaction.capitalGains.capitalGainLossCents >= 0
+                                ? "text-success"
+                                : "text-danger"
+                            }`}
+                          >
+                            {formatCurrency(
+                              Math.abs(
+                                transaction.capitalGains.capitalGainLossCents,
+                              ),
+                            )}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex gap-1">
+                    <IconButton
+                      onClick={() => handleEdit(transaction)}
+                      variant="primary"
+                      size="md"
+                      title="Edit Transaction"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => handleDelete(transaction._id)}
+                      variant="danger"
+                      size="md"
+                      title="Delete Transaction"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </IconButton>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
