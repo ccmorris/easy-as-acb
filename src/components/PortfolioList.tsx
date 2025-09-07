@@ -37,14 +37,13 @@ export function PortfolioList() {
   };
 
   if (portfolios === undefined) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   return (
     <div>
       <div className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-900">Portfolios</h2>
-        <p className="text-gray-600 mt-1">Manage your investment portfolios</p>
       </div>
 
       {showForm && (

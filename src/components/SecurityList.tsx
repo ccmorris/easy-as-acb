@@ -5,7 +5,7 @@ import { formatCurrency } from "../utils/currency";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { usePrefetchSecurityDetail } from "../hooks/usePrefetch";
-import { Plus, Trash2, X, ArrowLeft } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 import {
   Button,
   Input,
@@ -63,7 +63,7 @@ export function SecurityList() {
     securities === undefined ||
     portfolioSummary === undefined
   ) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   if (!portfolio) {
@@ -73,27 +73,9 @@ export function SecurityList() {
   return (
     <div>
       <div className="mb-6">
-        <button
-          onClick={() => navigate("/")}
-          className="text-primary-600 hover:text-primary-700 mb-4 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-md cursor-pointer flex items-center gap-2 px-3 py-2 hover:bg-primary-50 transition-colors duration-200"
-          title="Back to Portfolios"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">Back to Portfolios</span>
-        </button>
         <h2 className="text-2xl font-semibold text-gray-900">
           {portfolio.name}
         </h2>
-        <p className="text-gray-600 mt-1">
-          Manage securities in this portfolio
-        </p>
-      </div>
-
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold text-gray-900">Securities</h3>
-        <p className="text-gray-600 mt-1">
-          Track your investments and transactions
-        </p>
       </div>
 
       {showForm && (

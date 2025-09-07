@@ -12,7 +12,7 @@ interface SecuritySummaryProps {
 
 export function SecuritySummary({ summary, currency }: SecuritySummaryProps) {
   return (
-    <Card>
+    <Card className="p-0">
       <h3 className="text-lg font-semibold mb-3 text-gray-900">
         Security Summary
       </h3>

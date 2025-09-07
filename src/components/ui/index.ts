@@ -6,3 +6,4 @@ export { AddNewCard } from "./AddNewCard";
 export { Select } from "./Select";
 export { IconButton } from "./IconButton";
 export { DecimalInput } from "./DecimalInput";
+export { Breadcrumb } from "./Breadcrumb";
