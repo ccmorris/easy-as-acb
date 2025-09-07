@@ -127,7 +127,7 @@ export function SecurityList() {
                 title="Create Security"
               >
                 <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Create Security</span>
+                <span>Create Security</span>
               </Button>
               <Button
                 type="button"
@@ -137,7 +137,7 @@ export function SecurityList() {
                 title="Cancel"
               >
                 <X className="w-4 h-4" />
-                <span className="hidden sm:inline">Cancel</span>
+                <span>Cancel</span>
               </Button>
             </div>
           </form>
@@ -236,7 +236,7 @@ export function SecurityList() {
                 setShowForm(!showForm);
               }
             }}
-            minHeight="120px"
+            className="md:min-h-120px"
           >
             Create New Security
           </AddNewCard>

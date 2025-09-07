@@ -330,9 +330,7 @@ export function TransactionList({
               ) : (
                 <Plus className="w-4 h-4" />
               )}
-              <span className="hidden sm:inline">
-                {editingId ? "Update" : "Create"}
-              </span>
+              <span>{editingId ? "Update" : "Create"}</span>
             </Button>
             <Button
               type="button"
@@ -342,7 +340,7 @@ export function TransactionList({
               title="Cancel"
             >
               <X className="w-4 h-4" />
-              <span className="hidden sm:inline">Cancel</span>
+              <span>Cancel</span>
             </Button>
           </div>
         </form>
@@ -362,8 +360,7 @@ export function TransactionList({
             }}
             layout="horizontal"
             iconSize="sm"
-            minHeight="64px"
-            className="p-4"
+            className="p-4 md:min-h-64px"
           >
             Add New Transaction
           </AddNewCard>

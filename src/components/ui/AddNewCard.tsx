@@ -6,14 +6,12 @@ export interface AddNewCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   iconSize?: "sm" | "md" | "lg";
   layout?: "vertical" | "horizontal";
-  minHeight?: string;
 }
 
 export function AddNewCard({
   children,
   iconSize = "md",
   layout = "vertical",
-  minHeight = "80px",
   className,
   ...props
 }: AddNewCardProps) {
@@ -44,7 +42,6 @@ export function AddNewCard({
           "hover:text-primary-600",
           layout === "vertical" ? "flex-col" : "flex-row",
         )}
-        style={{ minHeight }}
       >
         <Plus className={cn(iconSizes[iconSize], iconSpacing[layout])} />
         <span className="text-sm font-medium">{children}</span>
