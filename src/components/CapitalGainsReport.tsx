@@ -77,6 +77,6 @@ export function CapitalGainsReport({ capitalGains }: CapitalGainsReportProps) {
           </div>
         ))}
       </div>
-    </div>
+    </Card>
   );
 }
