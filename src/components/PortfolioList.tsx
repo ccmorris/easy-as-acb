@@ -4,7 +4,14 @@ import { Id } from "../../convex/_generated/dataModel";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Trash2, X } from "lucide-react";
-import { Button, Input, Card, IconButton } from "./ui";
+import {
+  Button,
+  Input,
+  Card,
+  InteractiveCard,
+  AddNewCard,
+  IconButton,
+} from "./ui";
 
 export function PortfolioList() {
   const portfolios = useQuery(api.portfolios.listPortfolios);
@@ -35,8 +42,9 @@ export function PortfolioList() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-text">Portfolios</h2>
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold text-gray-900">Portfolios</h2>
+        <p className="text-gray-600 mt-1">Manage your investment portfolios</p>
       </div>
 
       {showForm && (
@@ -81,7 +89,7 @@ export function PortfolioList() {
       {!showForm && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {portfolios.map((portfolio) => (
-            <Card
+            <InteractiveCard
               key={portfolio._id}
               interactive
               onClick={() => navigate(`/portfolio/${portfolio._id}`)}
@@ -119,12 +127,11 @@ export function PortfolioList() {
                   <Trash2 className="w-5 h-5" />
                 </IconButton>
               </div>
-            </Card>
+            </InteractiveCard>
           ))}
 
           {/* Create New Portfolio Card */}
-          <Card
-            interactive
+          <AddNewCard
             onClick={() => setShowForm(!showForm)}
             tabIndex={0}
             onKeyDown={(e) => {
@@ -133,13 +140,9 @@ export function PortfolioList() {
                 setShowForm(!showForm);
               }
             }}
-            className="border-2 border-dashed border-gray-300 hover:border-primary-500 transition-colors"
           >
-            <div className="flex flex-col items-center justify-center h-full min-h-[80px] text-gray-500 hover:text-primary-600 transition-colors">
-              <Plus className="w-12 h-12 mb-2" />
-              <span className="text-sm font-medium">Create New Portfolio</span>
-            </div>
-          </Card>
+            Create New Portfolio
+          </AddNewCard>
         </div>
       )}
     </div>

@@ -5,7 +5,14 @@ import { formatCurrency } from "../utils/currency";
 import { useState } from "react";
 import { CurrencyInput } from "./CurrencyInput";
 import { Plus, Trash2, X, Edit, Save } from "lucide-react";
-import { Button, Input, Select, IconButton, DecimalInput } from "./ui";
+import {
+  Button,
+  Input,
+  Select,
+  IconButton,
+  DecimalInput,
+  AddNewCard,
+} from "./ui";
 
 interface TransactionListProps {
   securityId: Id<"securities">;
@@ -344,8 +351,7 @@ export function TransactionList({
       {!showForm && (
         <div className="space-y-2">
           {/* Create New Transaction Card */}
-          <div
-            className="p-3 border-2 border-dashed border-gray-300 rounded text-sm bg-white hover:border-primary-500 hover:shadow-md transition-colors cursor-pointer"
+          <AddNewCard
             onClick={() => setShowForm(!showForm)}
             tabIndex={0}
             onKeyDown={(e) => {
@@ -354,12 +360,13 @@ export function TransactionList({
                 setShowForm(!showForm);
               }
             }}
+            layout="horizontal"
+            iconSize="sm"
+            minHeight="64px"
+            className="p-4"
           >
-            <div className="flex items-center justify-center h-16 text-gray-500 hover:text-primary-600 transition-colors">
-              <Plus className="w-8 h-8 mr-2" />
-              <span className="font-medium">Add New Transaction</span>
-            </div>
-          </div>
+            Add New Transaction
+          </AddNewCard>
 
           {transactions
             .sort(

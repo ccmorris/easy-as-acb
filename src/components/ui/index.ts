@@ -1,6 +1,8 @@
 export { Button } from "./Button";
 export { Input } from "./Input";
 export { Card } from "./Card";
+export { InteractiveCard } from "./InteractiveCard";
+export { AddNewCard } from "./AddNewCard";
 export { Select } from "./Select";
 export { IconButton } from "./IconButton";
 export { DecimalInput } from "./DecimalInput";

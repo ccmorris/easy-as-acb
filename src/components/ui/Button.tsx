@@ -9,11 +9,16 @@ export interface ButtonProps
 }
 
 const buttonVariants = {
-  primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
-  secondary: "bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-500",
-  success: "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500",
-  danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
-  warning: "bg-yellow-600 text-white hover:bg-yellow-700 focus:ring-yellow-500",
+  primary:
+    "gradient-button-primary text-white hover:shadow-subtle focus:ring-primary-500",
+  secondary:
+    "bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-500 border border-gray-300",
+  success:
+    "gradient-button-success text-white hover:shadow-subtle focus:ring-success-500",
+  danger:
+    "gradient-button-danger text-white hover:shadow-subtle focus:ring-danger-500",
+  warning:
+    "bg-warning-600 text-white hover:bg-warning-700 focus:ring-warning-500 border border-warning-600",
 };
 
 const buttonSizes = {
@@ -32,7 +37,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
+        "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed",
         buttonVariants[variant],
         buttonSizes[size],
         className,

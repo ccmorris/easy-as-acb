@@ -6,7 +6,15 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { usePrefetchSecurityDetail } from "../hooks/usePrefetch";
 import { Plus, Trash2, X, ArrowLeft } from "lucide-react";
-import { Button, Input, Card, Select, IconButton } from "./ui";
+import {
+  Button,
+  Input,
+  Card,
+  InteractiveCard,
+  AddNewCard,
+  Select,
+  IconButton,
+} from "./ui";
 
 export function SecurityList() {
   const { portfolioId } = useParams<{ portfolioId: string }>();
@@ -67,17 +75,25 @@ export function SecurityList() {
       <div className="mb-6">
         <button
           onClick={() => navigate("/")}
-          className="text-primary hover:text-primary-hover mb-2 focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded cursor-pointer flex items-center gap-2"
+          className="text-primary-600 hover:text-primary-700 mb-4 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-md cursor-pointer flex items-center gap-2 px-3 py-2 hover:bg-primary-50 transition-colors duration-200"
           title="Back to Portfolios"
         >
           <ArrowLeft className="w-4 h-4" />
           <span className="hidden sm:inline">Back to Portfolios</span>
         </button>
-        <h2 className="text-2xl font-bold text-text">{portfolio.name}</h2>
+        <h2 className="text-2xl font-semibold text-gray-900">
+          {portfolio.name}
+        </h2>
+        <p className="text-gray-600 mt-1">
+          Manage securities in this portfolio
+        </p>
       </div>
 
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold text-text">Securities</h3>
+      <div className="mb-8">
+        <h3 className="text-xl font-semibold text-gray-900">Securities</h3>
+        <p className="text-gray-600 mt-1">
+          Track your investments and transactions
+        </p>
       </div>
 
       {showForm && (
@@ -153,7 +169,7 @@ export function SecurityList() {
               (s) => s.securityId === security._id,
             );
             return (
-              <Card
+              <InteractiveCard
                 key={security._id}
                 interactive
                 onClick={() =>
@@ -224,13 +240,12 @@ export function SecurityList() {
                     </div>
                   </div>
                 )}
-              </Card>
+              </InteractiveCard>
             );
           })}
 
           {/* Create New Security Card */}
-          <Card
-            interactive
+          <AddNewCard
             onClick={() => setShowForm(!showForm)}
             tabIndex={0}
             onKeyDown={(e) => {
@@ -239,13 +254,10 @@ export function SecurityList() {
                 setShowForm(!showForm);
               }
             }}
-            className="border-2 border-dashed border-gray-300 hover:border-primary-500 transition-colors"
+            minHeight="120px"
           >
-            <div className="flex flex-col items-center justify-center h-full min-h-[120px] text-gray-500 hover:text-primary-600 transition-colors">
-              <Plus className="w-12 h-12 mb-2" />
-              <span className="text-sm font-medium">Create New Security</span>
-            </div>
-          </Card>
+            Create New Security
+          </AddNewCard>
         </div>
       )}
     </div>

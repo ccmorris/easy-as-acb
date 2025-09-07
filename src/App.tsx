@@ -10,18 +10,20 @@ import { SecurityDetail } from "./components/SecurityDetail";
 export default function App() {
   return (
     <BrowserRouter>
-      <header className="sticky top-0 z-10 bg-white p-4 border-b border-gray-200">
-        <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900 flex-row items-center gap-2 flex">
-            <img src="/favicon.png" alt="Easy as ACB" className="w-8 h-8" />{" "}
-            Easy as ACB
-          </h1>
-          <Authenticated>
-            <SignOutButton />
-          </Authenticated>
+      <header className="sticky top-0 z-10 gradient-subtle-bg border-b border-gray-200 shadow-subtle">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <h1 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
+              <img src="/favicon.png" alt="Easy as ACB" className="w-8 h-8" />
+              Easy as ACB
+            </h1>
+            <Authenticated>
+              <SignOutButton />
+            </Authenticated>
+          </div>
         </div>
       </header>
-      <main className="p-8 flex flex-col gap-16 bg-white min-h-screen">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Authenticated>
           <Routes>
             <Route path="/" element={<PortfolioList />} />
