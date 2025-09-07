@@ -12,8 +12,9 @@ export default function App() {
     <BrowserRouter>
       <header className="sticky top-0 z-10 bg-white p-4 border-b border-gray-200">
         <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900">
-            Canadian ACB Tracker
+          <h1 className="text-xl font-bold text-gray-900 flex-row items-center gap-2 flex">
+            <img src="/favicon.png" alt="Easy as ACB" className="w-8 h-8" />{" "}
+            Easy as ACB
           </h1>
           <Authenticated>
             <SignOutButton />
