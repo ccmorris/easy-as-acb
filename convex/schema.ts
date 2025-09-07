@@ -24,8 +24,9 @@ export default defineSchema({
   transactions: defineTable({
     securityId: v.id("securities"),
     date: v.string(), // ISO8601 date string in UTC
-    numShares: v.number(), // can be negative for sells
-    totalPriceCents: v.number(), // amount in cents
+    numShares: v.optional(v.number()), // can be negative for sells, not stored for return_of_capital
+    totalPriceCents: v.number(), // amount in cents for buy/sell transactions
+    amountPerShare: v.optional(v.number()), // amount per share in dollars for eg. return_of_capital transactions
     commissionFeeCents: v.optional(v.number()), // amount in cents
     transactionType: v.union(
       v.literal("buy"),

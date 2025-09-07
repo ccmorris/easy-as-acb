@@ -9,8 +9,9 @@ export const createTransaction = mutation({
   args: {
     securityId: v.id("securities"),
     date: v.string(), // ISO8601 date string in UTC
-    numShares: v.number(),
+    numShares: v.optional(v.number()),
     totalPriceCents: v.number(),
+    amountPerShare: v.optional(v.number()),
     commissionFeeCents: v.optional(v.number()),
     transactionType: v.union(
       v.literal("buy"),
@@ -23,14 +24,35 @@ export const createTransaction = mutation({
   returns: v.id("transactions"),
   handler: async (ctx, args) => {
     // Validate inputs
-    if (args.numShares === 0) {
+    if (args.numShares !== undefined && args.numShares === 0) {
       throw new Error("Number of shares cannot be zero");
+    }
+    if (
+      args.transactionType !== "return_of_capital" &&
+      args.numShares === undefined
+    ) {
+      throw new Error("Number of shares is required for this transaction type");
     }
     if (args.totalPriceCents < 0) {
       throw new Error("Total price cannot be negative");
     }
     if (args.commissionFeeCents !== undefined && args.commissionFeeCents < 0) {
       throw new Error("Commission fee cannot be negative");
+    }
+    if (
+      args.transactionType === "return_of_capital" &&
+      args.amountPerShare === undefined
+    ) {
+      throw new Error(
+        "Return of capital per share is required for return of capital transactions",
+      );
+    }
+    if (
+      args.transactionType === "return_of_capital" &&
+      args.amountPerShare !== undefined &&
+      args.amountPerShare < 0
+    ) {
+      throw new Error("Return of capital per share cannot be negative");
     }
 
     // Verify security exists
@@ -55,8 +77,16 @@ export const createTransaction = mutation({
     return await ctx.db.insert("transactions", {
       securityId: args.securityId,
       date: args.date,
-      numShares: args.numShares,
-      totalPriceCents: args.totalPriceCents,
+      numShares:
+        args.transactionType === "return_of_capital"
+          ? undefined
+          : args.numShares,
+      totalPriceCents:
+        args.transactionType === "return_of_capital" ? 0 : args.totalPriceCents,
+      amountPerShare:
+        args.transactionType === "return_of_capital"
+          ? args.amountPerShare
+          : undefined,
       commissionFeeCents: args.commissionFeeCents || 0,
       transactionType: args.transactionType,
       sortOrder: maxSortOrder + 1,
@@ -77,8 +107,9 @@ export const listTransactionsBySecurity = query({
       _creationTime: v.number(),
       securityId: v.id("securities"),
       date: v.string(),
-      numShares: v.number(),
+      numShares: v.optional(v.number()),
       totalPriceCents: v.number(),
+      amountPerShare: v.optional(v.number()),
       commissionFeeCents: v.optional(v.number()),
       transactionType: v.union(
         v.literal("buy"),
@@ -148,8 +179,9 @@ export const getTransaction = query({
       _creationTime: v.number(),
       securityId: v.id("securities"),
       date: v.string(),
-      numShares: v.number(),
+      numShares: v.optional(v.number()),
       totalPriceCents: v.number(),
+      amountPerShare: v.optional(v.number()),
       commissionFeeCents: v.optional(v.number()),
       transactionType: v.union(
         v.literal("buy"),
@@ -174,8 +206,9 @@ export const updateTransaction = mutation({
   args: {
     transactionId: v.id("transactions"),
     date: v.string(), // ISO8601 date string in UTC
-    numShares: v.number(),
+    numShares: v.optional(v.number()),
     totalPriceCents: v.number(),
+    amountPerShare: v.optional(v.number()),
     commissionFeeCents: v.optional(v.number()),
     transactionType: v.union(
       v.literal("buy"),
@@ -188,14 +221,35 @@ export const updateTransaction = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     // Validate inputs
-    if (args.numShares === 0) {
+    if (args.numShares !== undefined && args.numShares === 0) {
       throw new Error("Number of shares cannot be zero");
+    }
+    if (
+      args.transactionType !== "return_of_capital" &&
+      args.numShares === undefined
+    ) {
+      throw new Error("Number of shares is required for this transaction type");
     }
     if (args.totalPriceCents < 0) {
       throw new Error("Total price cannot be negative");
     }
     if (args.commissionFeeCents !== undefined && args.commissionFeeCents < 0) {
       throw new Error("Commission fee cannot be negative");
+    }
+    if (
+      args.transactionType === "return_of_capital" &&
+      args.amountPerShare === undefined
+    ) {
+      throw new Error(
+        "Return of capital per share is required for return of capital transactions",
+      );
+    }
+    if (
+      args.transactionType === "return_of_capital" &&
+      args.amountPerShare !== undefined &&
+      args.amountPerShare < 0
+    ) {
+      throw new Error("Return of capital per share cannot be negative");
     }
 
     const transaction = await ctx.db.get(args.transactionId);
@@ -205,8 +259,16 @@ export const updateTransaction = mutation({
 
     await ctx.db.patch(args.transactionId, {
       date: args.date,
-      numShares: args.numShares,
-      totalPriceCents: args.totalPriceCents,
+      numShares:
+        args.transactionType === "return_of_capital"
+          ? undefined
+          : args.numShares,
+      totalPriceCents:
+        args.transactionType === "return_of_capital" ? 0 : args.totalPriceCents,
+      amountPerShare:
+        args.transactionType === "return_of_capital"
+          ? args.amountPerShare
+          : undefined,
       commissionFeeCents: args.commissionFeeCents || 0,
       transactionType: args.transactionType,
     });

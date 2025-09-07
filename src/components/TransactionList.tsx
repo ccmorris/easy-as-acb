@@ -5,15 +5,16 @@ import { formatCurrency } from "../utils/currency";
 import { useState } from "react";
 import { CurrencyInput } from "./CurrencyInput";
 import { Plus, Trash2, X, Edit, Save } from "lucide-react";
-import { Button, Input, Select, IconButton } from "./ui";
+import { Button, Input, Select, IconButton, DecimalInput } from "./ui";
 
 interface TransactionListProps {
   securityId: Id<"securities">;
   transactions: Array<{
     _id: Id<"transactions">;
     date: string;
-    numShares: number;
+    numShares?: number;
     totalPriceCents: number;
+    amountPerShare?: number;
     commissionFeeCents?: number;
     transactionType: string;
     capitalGains?: {
@@ -22,11 +23,13 @@ interface TransactionListProps {
       capitalGainLossCents: number;
     };
   }>;
+  currentShares?: number;
 }
 
 export function TransactionList({
   securityId,
   transactions,
+  currentShares,
 }: TransactionListProps) {
   const createTransaction = useMutation(api.transactions.createTransaction);
   const updateTransaction = useMutation(api.transactions.updateTransaction);
@@ -37,26 +40,58 @@ export function TransactionList({
     date: new Date().toISOString().split("T")[0],
     numShares: "",
     totalPriceCents: "0",
+    amountPerShare: "0.000000",
     commissionFeeCents: "0",
-    transactionType: "buy" as const,
+    transactionType: "buy" as
+      | "buy"
+      | "sell"
+      | "return_of_capital"
+      | "reinvested_dividend"
+      | "reinvested_capital_gains_distribution",
   });
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const numShares = parseFloat(formData.numShares);
-    const totalPriceCents = parseInt(formData.totalPriceCents, 10);
+    const amountPerShareCents = parseInt(formData.totalPriceCents, 10);
     const commissionFeeCents = formData.commissionFeeCents
       ? parseInt(formData.commissionFeeCents, 10)
       : undefined;
     // Store date as ISO8601 string in UTC
     const date = new Date(formData.date + "T00:00:00.000Z").toISOString();
 
-    if (numShares && totalPriceCents >= 0) {
+    let numShares: number | undefined;
+    let totalPriceCents: number;
+    let amountPerShare: number | undefined;
+
+    if (formData.transactionType === "return_of_capital") {
+      // For return of capital, don't store numShares - it will be calculated dynamically
+      if (!currentShares || currentShares <= 0) {
+        alert(
+          "Cannot create return of capital transaction: no shares currently held",
+        );
+        return;
+      }
+      numShares = undefined; // Don't store numShares for return of capital
+      totalPriceCents = 0; // Not used for return of capital
+      amountPerShare = parseFloat(formData.amountPerShare);
+    } else {
+      // For other transaction types, use entered number of shares
+      numShares = parseFloat(formData.numShares);
+      totalPriceCents = amountPerShareCents;
+      amountPerShare = undefined;
+    }
+
+    if (
+      (numShares !== undefined ||
+        formData.transactionType === "return_of_capital") &&
+      amountPerShareCents >= 0
+    ) {
       await createTransaction({
         securityId,
         date,
         numShares,
         totalPriceCents,
+        amountPerShare,
         commissionFeeCents,
         transactionType: formData.transactionType,
       });
@@ -64,6 +99,7 @@ export function TransactionList({
         date: new Date().toISOString().split("T")[0],
         numShares: "",
         totalPriceCents: "0",
+        amountPerShare: "0.000000",
         commissionFeeCents: "0",
         transactionType: "buy",
       });
@@ -73,10 +109,19 @@ export function TransactionList({
 
   const handleEdit = (transaction: any) => {
     setEditingId(transaction._id);
+
+    // For return of capital, totalPriceCents is already the amount per share
+    // For other transaction types, use the total amount directly
+    const amountToDisplay = transaction.totalPriceCents.toString();
+
     setFormData({
       date: new Date(transaction.date).toISOString().split("T")[0],
-      numShares: transaction.numShares.toString(),
-      totalPriceCents: transaction.totalPriceCents.toString(),
+      numShares: transaction.numShares ? transaction.numShares.toString() : "",
+      totalPriceCents: amountToDisplay,
+      amountPerShare:
+        transaction.transactionType === "return_of_capital"
+          ? (transaction.amountPerShare || 0).toString()
+          : "0.000000",
       commissionFeeCents: transaction.commissionFeeCents
         ? transaction.commissionFeeCents.toString()
         : "0",
@@ -89,20 +134,46 @@ export function TransactionList({
     e.preventDefault();
     if (!editingId) return;
 
-    const numShares = parseFloat(formData.numShares);
-    const totalPriceCents = parseInt(formData.totalPriceCents, 10);
+    const amountPerShareCents = parseInt(formData.totalPriceCents, 10);
     const commissionFeeCents = formData.commissionFeeCents
       ? parseInt(formData.commissionFeeCents, 10)
       : undefined;
     // Store date as ISO8601 string in UTC
     const date = new Date(formData.date + "T00:00:00.000Z").toISOString();
 
-    if (numShares && totalPriceCents >= 0) {
+    let numShares: number | undefined;
+    let totalPriceCents: number;
+    let amountPerShare: number | undefined;
+
+    if (formData.transactionType === "return_of_capital") {
+      // For return of capital, don't store numShares - it will be calculated dynamically
+      if (!currentShares || currentShares <= 0) {
+        alert(
+          "Cannot update return of capital transaction: no shares currently held",
+        );
+        return;
+      }
+      numShares = undefined; // Don't store numShares for return of capital
+      totalPriceCents = 0; // Not used for return of capital
+      amountPerShare = parseFloat(formData.amountPerShare);
+    } else {
+      // For other transaction types, use entered number of shares
+      numShares = parseFloat(formData.numShares);
+      totalPriceCents = amountPerShareCents;
+      amountPerShare = undefined;
+    }
+
+    if (
+      (numShares !== undefined ||
+        formData.transactionType === "return_of_capital") &&
+      amountPerShareCents >= 0
+    ) {
       await updateTransaction({
         transactionId: editingId,
         date,
         numShares,
         totalPriceCents,
+        amountPerShare,
         commissionFeeCents,
         transactionType: formData.transactionType,
       });
@@ -110,6 +181,7 @@ export function TransactionList({
         date: new Date().toISOString().split("T")[0],
         numShares: "",
         totalPriceCents: "0",
+        amountPerShare: "0.000000",
         commissionFeeCents: "0",
         transactionType: "buy",
       });
@@ -125,6 +197,7 @@ export function TransactionList({
       date: new Date().toISOString().split("T")[0],
       numShares: "",
       totalPriceCents: "0",
+      amountPerShare: "0.000000",
       commissionFeeCents: "0",
       transactionType: "buy",
     });
@@ -176,31 +249,58 @@ export function TransactionList({
             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
             required
           />
-          <Input
-            id="num-shares"
-            label="Number of Shares"
-            type="number"
-            step="0.000001"
-            value={formData.numShares}
-            onChange={(e) =>
-              setFormData({ ...formData, numShares: e.target.value })
-            }
-            placeholder="Enter number of shares"
-            inputMode="decimal"
-            enterKeyHint="next"
-            required
-          />
-          <CurrencyInput
-            id="total-price"
-            label="Total Price"
-            value={formData.totalPriceCents}
-            onChange={(value) =>
-              setFormData({ ...formData, totalPriceCents: value })
-            }
-            placeholder="0.00"
-            enterKeyHint="next"
-            required
-          />
+          {formData.transactionType !== "return_of_capital" && (
+            <Input
+              id="num-shares"
+              label="Number of Shares"
+              type="number"
+              step="0.000001"
+              value={formData.numShares}
+              onChange={(e) =>
+                setFormData({ ...formData, numShares: e.target.value })
+              }
+              placeholder="Enter number of shares"
+              inputMode="decimal"
+              enterKeyHint="next"
+              required
+            />
+          )}
+          {formData.transactionType === "return_of_capital" ? (
+            <div>
+              <DecimalInput
+                id="amount-per-share"
+                label="Amount Per Share"
+                value={formData.amountPerShare}
+                onChange={(value) =>
+                  setFormData({ ...formData, amountPerShare: value })
+                }
+                placeholder="0.000000"
+                enterKeyHint="next"
+                required
+              />
+              {currentShares && currentShares > 0 && (
+                <p className="text-sm text-gray-600 mt-1">
+                  Total amount will be calculated as:{" "}
+                  {formData.amountPerShare
+                    ? `$${(parseFloat(formData.amountPerShare) * currentShares).toFixed(2)}`
+                    : "$0.00"}
+                  ({currentShares.toFixed(6)} shares)
+                </p>
+              )}
+            </div>
+          ) : (
+            <CurrencyInput
+              id="total-price"
+              label="Total Price"
+              value={formData.totalPriceCents}
+              onChange={(value) =>
+                setFormData({ ...formData, totalPriceCents: value })
+              }
+              placeholder="0.00"
+              enterKeyHint="next"
+              required
+            />
+          )}
           <CurrencyInput
             id="commission-fee"
             label="Commission Fee (Optional)"
@@ -261,91 +361,112 @@ export function TransactionList({
             </div>
           </div>
 
-          {transactions.map((transaction) => {
-            const isSellTransaction = transaction.transactionType === "sell";
+          {transactions
+            .sort(
+              (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+            )
+            .map((transaction) => {
+              const isSellTransaction = transaction.transactionType === "sell";
 
-            return (
-              <div
-                key={transaction._id}
-                className="p-3 border border-gray-200 rounded text-sm bg-white"
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="text-gray-600">
-                      {new Date(transaction.date).toISOString().split("T")[0]}
-                    </div>
-                    <div className="text-gray-600">
-                      {transaction.transactionType
-                        .replace(/_/g, " ")
-                        .toUpperCase()}
-                    </div>
-                    <div>
-                      {Math.abs(transaction.numShares)} shares @{" "}
-                      {formatCurrency(
-                        (transaction.totalPriceCents -
-                          (transaction.commissionFeeCents || 0)) /
-                          Math.abs(transaction.numShares),
-                      )}{" "}
-                      per share
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      Total: {formatCurrency(transaction.totalPriceCents)}
-                      {transaction.commissionFeeCents &&
-                        transaction.commissionFeeCents > 0 && (
+              return (
+                <div
+                  key={transaction._id}
+                  className="p-3 border border-gray-200 rounded text-sm bg-white"
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="text-gray-600">
+                        {new Date(transaction.date).toISOString().split("T")[0]}
+                      </div>
+                      <div className="text-gray-600">
+                        {transaction.transactionType
+                          .replace(/_/g, " ")
+                          .toUpperCase()}
+                      </div>
+                      <div>
+                        {transaction.transactionType === "return_of_capital"
+                          ? `${Math.abs(currentShares || 0)} shares @`
+                          : `${Math.abs(transaction.numShares || 0)} shares @`}{" "}
+                        {transaction.transactionType === "return_of_capital"
+                          ? // For return of capital, show the full amount per share without rounding
+                            `$${(transaction.amountPerShare || 0).toFixed(6)}`
+                          : // For other transactions, calculate per share from total
+                            formatCurrency(
+                              (transaction.totalPriceCents -
+                                (transaction.commissionFeeCents || 0)) /
+                                Math.abs(transaction.numShares || 1),
+                            )}{" "}
+                        per share
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Total:{" "}
+                        {transaction.transactionType === "return_of_capital"
+                          ? // For return of capital, calculate total from per-share amount (decimal) with 2 decimal places
+                            `$${((transaction.amountPerShare || 0) * Math.abs(currentShares || 0)).toFixed(2)}`
+                          : // For other transactions, use stored total
+                            formatCurrency(transaction.totalPriceCents)}
+                        {Boolean(
+                          transaction.commissionFeeCents &&
+                            transaction.commissionFeeCents > 0,
+                        ) && (
                           <span>
                             {" "}
                             (Fee:{" "}
-                            {formatCurrency(transaction.commissionFeeCents)})
+                            {formatCurrency(
+                              transaction.commissionFeeCents || 0,
+                            )}
+                            )
                           </span>
                         )}
-                    </div>
+                      </div>
 
-                    {/* Show capital gains/losses for sell transactions */}
-                    {isSellTransaction && transaction.capitalGains && (
-                      <>
-                        <div className="text-sm text-gray-600">
-                          {transaction.capitalGains.capitalGainLossCents >= 0
-                            ? "Capital Gain:"
-                            : "Capital Loss:"}{" "}
-                          <span
-                            className={`font-mono ${
-                              transaction.capitalGains.capitalGainLossCents >= 0
-                                ? "text-success"
-                                : "text-danger"
-                            }`}
-                          >
-                            {formatCurrency(
-                              Math.abs(
-                                transaction.capitalGains.capitalGainLossCents,
-                              ),
-                            )}
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                  <div className="flex gap-1">
-                    <IconButton
-                      onClick={() => handleEdit(transaction)}
-                      variant="primary"
-                      size="md"
-                      title="Edit Transaction"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </IconButton>
-                    <IconButton
-                      onClick={() => handleDelete(transaction._id)}
-                      variant="danger"
-                      size="md"
-                      title="Delete Transaction"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </IconButton>
+                      {/* Show capital gains/losses for sell transactions */}
+                      {isSellTransaction && transaction.capitalGains && (
+                        <>
+                          <div className="text-sm text-gray-600">
+                            {transaction.capitalGains.capitalGainLossCents >= 0
+                              ? "Capital Gain:"
+                              : "Capital Loss:"}{" "}
+                            <span
+                              className={`font-mono ${
+                                transaction.capitalGains.capitalGainLossCents >=
+                                0
+                                  ? "text-success"
+                                  : "text-danger"
+                              }`}
+                            >
+                              {formatCurrency(
+                                Math.abs(
+                                  transaction.capitalGains.capitalGainLossCents,
+                                ),
+                              )}
+                            </span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      <IconButton
+                        onClick={() => handleEdit(transaction)}
+                        variant="primary"
+                        size="md"
+                        title="Edit Transaction"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </IconButton>
+                      <IconButton
+                        onClick={() => handleDelete(transaction._id)}
+                        variant="danger"
+                        size="md"
+                        title="Delete Transaction"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </IconButton>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
       )}
     </div>

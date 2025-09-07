@@ -10,8 +10,9 @@ function calculateACBHelper(
   transactions: Array<{
     _id: any;
     date: string;
-    numShares: number;
+    numShares?: number;
     totalPriceCents: number;
+    amountPerShare?: number;
     commissionFeeCents?: number;
     transactionType: string;
   }>,
@@ -33,11 +34,12 @@ function calculateACBHelper(
     const {
       numShares,
       totalPriceCents,
+      amountPerShare,
       commissionFeeCents = 0,
       transactionType,
     } = transaction;
 
-    if (transactionType === "sell") {
+    if (transactionType === "sell" && numShares !== undefined) {
       // Calculate ACB per share at time of sale
       const acbPerShareCents =
         runningShares > 0 ? runningACBCents / runningShares : 0;
@@ -62,24 +64,31 @@ function calculateACBHelper(
       case "buy":
       case "reinvested_dividend":
       case "reinvested_capital_gains_distribution":
-        runningShares += numShares;
-        runningACBCents += totalPriceCents + commissionFeeCents;
+        if (numShares !== undefined) {
+          runningShares += numShares;
+          runningACBCents += totalPriceCents + commissionFeeCents;
+        }
         break;
 
       case "sell":
-        if (runningShares > 0) {
-          const acbPerShare = runningACBCents / runningShares;
-          const acbForSoldShares = acbPerShare * numShares;
-          runningACBCents -= acbForSoldShares;
+        if (numShares !== undefined) {
+          if (runningShares > 0) {
+            const acbPerShare = runningACBCents / runningShares;
+            const acbForSoldShares = acbPerShare * numShares;
+            runningACBCents -= acbForSoldShares;
+          }
+          runningShares -= numShares;
         }
-        runningShares -= numShares;
         break;
 
       case "return_of_capital":
-        if (runningShares > 0) {
-          const acbPerShare = runningACBCents / runningShares;
+        if (runningShares > 0 && amountPerShare !== undefined) {
+          // For return of capital, amountPerShare is the amount per share (as decimal)
+          // Convert to cents and use current running shares instead of stored numShares
+          const amountPerShareCents = amountPerShare * 100;
+          const totalReturnOfCapitalCents = amountPerShareCents * runningShares;
           const acbReduction = Math.min(
-            acbPerShare * numShares,
+            totalReturnOfCapitalCents,
             runningACBCents,
           );
           runningACBCents -= acbReduction;
@@ -183,8 +192,9 @@ export const calculateACB = query({
         _creationTime: v.number(),
         securityId: v.id("securities"),
         date: v.string(),
-        numShares: v.number(),
+        numShares: v.optional(v.number()),
         totalPriceCents: v.number(),
+        amountPerShare: v.optional(v.number()),
         commissionFeeCents: v.optional(v.number()),
         transactionType: v.union(
           v.literal("buy"),
@@ -263,8 +273,9 @@ export const getSecurityDetailData = query({
         _creationTime: v.number(),
         securityId: v.id("securities"),
         date: v.string(),
-        numShares: v.number(),
+        numShares: v.optional(v.number()),
         totalPriceCents: v.number(),
+        amountPerShare: v.optional(v.number()),
         commissionFeeCents: v.optional(v.number()),
         transactionType: v.union(
           v.literal("buy"),

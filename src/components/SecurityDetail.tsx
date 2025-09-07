@@ -70,6 +70,7 @@ export const SecurityDetail = function SecurityDetail() {
           <TransactionList
             securityId={securityId as Id<"securities">}
             transactions={data.transactions}
+            currentShares={data.summary?.totalShares}
           />
         </div>
       </div>
